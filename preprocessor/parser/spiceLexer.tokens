@@ -1,0 +1,11 @@
+T__0=1
+T__1=2
+LINECOMMENT=3
+FLOAT=4
+INT=5
+VAL=6
+COMBS=7
+NL=8
+WS=9
+'.end'=1
+'.END'=2
