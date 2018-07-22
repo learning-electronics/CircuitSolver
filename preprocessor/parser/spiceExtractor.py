@@ -2,7 +2,7 @@ from spiceParser import spiceParser
 from spiceListener import spiceListener
 
 import sys
-sys.path=['../']
+sys.path+=['../']
 
 from datastructure import Circuit,Branch,Component
 

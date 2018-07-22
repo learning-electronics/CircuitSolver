@@ -5,7 +5,7 @@ from spiceParser import spiceParser
 from spiceExtractor import spiceExtractor
 
 import sys
-sys.path=['../']
+sys.path+=['../']
 
 from datastructure import Circuit,Branch,Component
  
@@ -35,4 +35,5 @@ def run_parser(file_to_parse):
 	Circuit.fixNodes(raw_circuit)
 	raw_circuit.updNodeCnt()
 	
-	print(raw_circuit)
+	#print(raw_circuit)
+	return raw_circuit
