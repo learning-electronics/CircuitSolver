@@ -34,6 +34,7 @@ CREATE TABLE EXERCISE(
 	FOREIGN KEY(SubChapID) REFERENCES SUBCHAPTER(SubChapID),
 	FOREIGN KEY(ChapID) REFERENCES SUBCHAPTER(ChapID));
 
+delimiter //
 CREATE PROCEDURE sp_CreateExercise(
 	IN cid INTEGER,
 	IN type CHAR,
@@ -45,35 +46,40 @@ CREATE PROCEDURE sp_CreateExercise(
 	IN sr VARCHAR(500),
 	OUT ret INTEGER)
 BEGIN
+	DECLARE nextId INTEGER;
 	START TRANSACTION;
-	DECLARE nextId INTEGER DEFAULT -1;
-	SELECT @nextId=ID 
-	FROM EXERCISE 
-	ORDER BY ID DESC;	
+	SET @nextId = (SELECT ID 
+					FROM EXERCISE 
+					ORDER BY ID DESC 
+					LIMIT 1);	
 
-	SET @nextid = @nextid + 1;
+	SET @nextid = IF(@nextid=NULL,0,@nextid + 1);
 
 	INSERT INTO Exercise(ID,CID,Type,CompName,CorrectSol,WrongAns1,WrongAns2,WrongAns3,SpecificRes) VALUES(@nextID,@cid,@type,@cn	,@cs,@wa1,@wa2,@wa3,@sr);
+	COMMIT;
+
 	SELECT @nextId;
-END
+END //
 
+delimiter //
+CREATE PROCEDURE sp_CreateCircuit( 
+	IN ip VARCHAR(100), 
+	IN br VARCHAR(500), 
+	IN be VARCHAR(100),
+	OUT ret INTEGER)
+BEGIN
+	DECLARE nextId INTEGER;
+	START TRANSACTION;
+	SET @nextId = (SELECT ID 
+					FROM CIRCUIT 
+					ORDER BY ID DESC
+					LIMIT 1);	
 
-CREATE PROCEDURE sp_CreateCircuit 
-	@ip VARCHAR(100), 
-	@br VARCHAR(500), 
-	@be VARCHAR(100)
-AS
-	START TRANSACTION
-
-	DECLARE nextId INTEGER DEFAULT -1;
-	SELECT @nextId=ID 
-	FROM CIRCUIT 
-	ORDER BY ID DESC;	
-
-	SET @nextid = @nextid + 1;
+	SET @nextid = IF(@nextid=NULL,0,@nextid + 1);
 	
 	INSERT INTO Circuit(ID,ImagePath,BaseRes,BaseEnu) VALUES(@nextID,@ip,@br,@be);
 	COMMIT;
 
 	SELECT @nextId;
+END //
 
