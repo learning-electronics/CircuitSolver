@@ -40,6 +40,12 @@ class Circuit:
 	def getBranchesNode(self,nd):
 		return list(filter(lambda x: x.node1==nd or x.node2==nd,self.branches)) 
 
+	def getBranchesWithVS(self):
+		return list(filter(lambda x: x.comp.ctype == 'V' or x.comp.ctype == 'VCVS' or x.comp.ctype == 'CCVS', self.branches))
+
+	def getBranchesWithDep(self):
+		return list(filter(lambda x: x.comp.ctype == 'VCCS' or x.comp.ctype == 'CCCS' or x.comp.ctype == 'VCVS' or x.comp.ctype == 'CCVS', self.branches))
+
 	def renameNode(self,nnew,nold):
 		for _br in self.branches:
 			_nds=list(_br.getNodes())
@@ -190,16 +196,15 @@ class Branch:
 		self.node2=ns[1]
 
 class Component:
-	def __init__(self,nm,ct,vl,sc,dep=None):
+	def __init__(self,nm,vl,ct,dep=None):
 		self.name=nm  #str()
 		self.ctype=ct #str()
-		self.value=vl #float() # ?
-		self.scale=sc #str()   # ?
+		self.value=float(vl) #float() # ?
 		self.dependent=dep #Branch()
 
 	def __repr__(self):
 		_dep=str(self.dependent).replace("\n","\n   ")
-		return "Component:\nName: "+self.name+"\nType: "+self.ctype+"\nValue: "+str(self.value)+"\nScale: "+self.scale + "\nDependency: "+("\n" if _dep!="None" else "")+ _dep
+		return "Component:\nName: "+self.name+"\nType: "+self.ctype+"\nValue: "+str(self.value)+ "\nDependency: "+("\n" if _dep!="None" else "")+ _dep
 
 	def getName(self):
 		return self.name
