@@ -70,7 +70,7 @@ class spiceExtractor(spiceListener):
 		_val=float(_val)
 
 		#Create a Component
-		_c=Component(ctx.name.text,ctx.name.text[0],_val,_scale,_dep) #Check ctype, value, scale
+		_c=Component(ctx.name.text,Component.convertSI(_val,_scale),ctx.name.text[0],_dep) #Check ctype, value, scale
 
 		#Place inside branch
 		_b=Branch(int(ctx.nodes(0).n1.text),int(ctx.nodes(0).n2.text),_c)

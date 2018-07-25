@@ -208,3 +208,28 @@ class Component:
 
 	def getName(self):
 		return self.name
+	def convertSI(value,unit):
+		if len(unit)==1:
+			pass
+		elif unit[0]=='F':
+			value*=1e-15
+		elif unit[0]=='P':
+			value*=1e-12
+		elif unit[0]=='N':
+			value*=1e-9
+		elif unit[0]=='U':
+			value*=1e-6
+		elif unit[0:3]=='MIL':
+			value*=25.4e-6
+		elif unit[0]=='M' or unit[0]=='C':
+			value*=1e-3
+		elif unit[0]=='K':
+			value*=1e3
+		elif unit[0]=='MEG':
+			value*=1e6
+		elif unit[0]=='G':
+			value*=1e9
+		elif unit[0]=='T':
+			value*=1e12
+
+		return value
