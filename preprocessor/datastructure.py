@@ -209,7 +209,7 @@ class Component:
 	def getName(self):
 		return self.name
 	def convertSI(value,unit):
-		if len(unit)==1:
+		if len(unit)==1 or unit==None or unit=='':
 			pass
 		elif unit[0]=='F':
 			value*=1e-15

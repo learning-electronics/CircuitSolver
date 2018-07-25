@@ -44,7 +44,7 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	print(_cursor.fetchall())
 
 def main(argv):
-	handler('example1.cir','cir.png','Test question','V','R1')
+	handler(argv[1],'cir.png','Test question','V','R1')
 
 if __name__ == '__main__':
         main(sys.argv)
