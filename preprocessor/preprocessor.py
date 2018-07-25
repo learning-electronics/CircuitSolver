@@ -8,6 +8,9 @@ sys.path+=['mna/']
 from mnaModule import mna
 from respSel import get_solution 
 
+sys.path+=['explainer/']
+from circuit2na import stepByStep 
+
 import MySQLdb as mysql
 
 def handler(circpath,imgpath,questtext,questtype,compname):
@@ -19,13 +22,11 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	#print(mnastuff)
 
 	#get base resolution
-	baseres="This is the base resolution"
+	baseres=stepByStep(circ)
 
-	sqlquery='CALL sp_CreateCircuit(\''+circpath+'\',\''+imgpath+'\',\''+baseres+'\',\''+questtext+'\');'
-	print(sqlquery)
-	_cursor.execute(sqlquery)
+	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(circpath,imgpath,baseres,questtext))
 
-	cid=_cursor.fetchall()[0][0]
+	cid=int(_cursor.fetchall()[0][0])
 	print('CircuitID = '+str(cid))
 
 	#should be a cycle
@@ -39,9 +40,7 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 
 	specific_res='rip'
 
-	sqlquery='CALL sp_CreateExercise('+str(cid)+',\''+questtype+'\',\''+compname+'\','+str(correct_answer)+','+str(ws1)+','+str(ws2)+','+str(ws3)+',\''+specific_res+'\');'
-	print(sqlquery)
-	_cursor.execute(sqlquery)
+	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws1,ws2,ws3,specific_res))
 	print(_cursor.fetchall())
 
 def main(argv):
