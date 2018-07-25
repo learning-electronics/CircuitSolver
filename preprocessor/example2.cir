@@ -1,0 +1,8 @@
+*Simple linear example
+
+example exercise
+V1 1 0 2V
+R1 1 2 2ohm
+Vm 2 3 0V;
+R2 3 0 2ohm
+.END

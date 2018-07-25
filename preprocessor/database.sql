@@ -1,3 +1,9 @@
+CREATE DATABASE CIRCUITDB;
+CREATE USER ele;
+GRANT ALL ON CIRCUITDB.* TO 'ele'@'localhost' IDENTIFIED BY 'itsucks';
+
+USE CIRCUITDB;
+
 CREATE TABLE CHAPTER(
 	ID INTEGER,
 	Name VARCHAR(40),
@@ -12,9 +18,10 @@ CREATE TABLE SUBCHAPTER(
 
 CREATE TABLE CIRCUIT(
 	ID INTEGER,
+	SpicePath VARCHAR(100),
 	ImagePath VARCHAR(100),
-	BaseRes VARCHAR(500),
-	BaseEnu VARCHAR(100),
+	BaseRes VARCHAR(10000),
+	BaseEnu VARCHAR(1000),
 	PRIMARY KEY(ID));
 
 CREATE TABLE EXERCISE(
@@ -26,7 +33,7 @@ CREATE TABLE EXERCISE(
 	WrongAns1 FLOAT,
 	WrongAns2 FLOAT,
 	WrongAns3 FLOAT,
-	SpecificRes VARCHAR(500),
+	SpecificRes VARCHAR(5000),
 	SubChapID INTEGER,
 	ChapID INTEGER,
 	PRIMARY KEY(ID),
@@ -43,8 +50,7 @@ CREATE PROCEDURE sp_CreateExercise(
 	IN wa1 FLOAT,	
 	IN wa2 FLOAT,	
 	IN wa3 FLOAT,	
-	IN sr VARCHAR(500),
-	OUT ret INTEGER)
+	IN sr VARCHAR(5000))
 BEGIN
 	DECLARE nextId INTEGER;
 	START TRANSACTION;
@@ -53,9 +59,9 @@ BEGIN
 					ORDER BY ID DESC 
 					LIMIT 1);	
 
-	SET @nextid = IF(@nextid=NULL,0,@nextid + 1);
+	SET @nextid = IF(@nextid IS NULL,0,@nextid + 1);
 
-	INSERT INTO Exercise(ID,CID,Type,CompName,CorrectSol,WrongAns1,WrongAns2,WrongAns3,SpecificRes) VALUES(@nextID,@cid,@type,@cn	,@cs,@wa1,@wa2,@wa3,@sr);
+	INSERT INTO EXERCISE(ID,CircuitID,Type,CompName,CorrectSol,WrongAns1,WrongAns2,WrongAns3,SpecificRes) VALUES(@nextID,cid,type,cn,cs,wa1,wa2,wa3,sr);
 	COMMIT;
 
 	SELECT @nextId;
@@ -63,10 +69,10 @@ END //
 
 delimiter //
 CREATE PROCEDURE sp_CreateCircuit( 
+	IN sp VARCHAR(100), 
 	IN ip VARCHAR(100), 
-	IN br VARCHAR(500), 
-	IN be VARCHAR(100),
-	OUT ret INTEGER)
+	IN br VARCHAR(10000), 
+	IN be VARCHAR(100))
 BEGIN
 	DECLARE nextId INTEGER;
 	START TRANSACTION;
@@ -75,11 +81,12 @@ BEGIN
 					ORDER BY ID DESC
 					LIMIT 1);	
 
-	SET @nextid = IF(@nextid=NULL,0,@nextid + 1);
+	SET @nextid = IF(@nextid IS NULL,0,@nextid + 1);
 	
-	INSERT INTO Circuit(ID,ImagePath,BaseRes,BaseEnu) VALUES(@nextID,@ip,@br,@be);
+	INSERT INTO CIRCUIT(ID,SpicePath,ImagePath,BaseRes,BaseEnu) VALUES(@nextID,sp,ip,br,be);
 	COMMIT;
 
 	SELECT @nextId;
 END //
 
+delimiter ; //

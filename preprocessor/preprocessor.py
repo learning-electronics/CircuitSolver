@@ -8,17 +8,26 @@ sys.path+=['mna/']
 from mnaModule import mna
 from respSel import get_solution 
 
+sys.path+=['explainer/']
+from circuit2na import stepByStep 
+
+import MySQLdb as mysql
+
 def handler(circpath,imgpath,questtext,questtype,compname):
+	_connect=mysql.connect(user='ele',passwd='itsucks',host='localhost', db='CIRCUITDB')
+	_cursor=_connect.cursor()
+
 	circ=run_parser(circpath)
 	mnastuff=mna(circ)
 	#print(mnastuff)
 
 	#get base resolution
-	baseres="This is the base resolution"
+	baseres=stepByStep(circ)
 
-	print('EXEC sp_CreateCircuit \''+imgpath+'\',\''+baseres+'\',\''+questtext+'\';')
-	#TODO
-	cid=10101010
+	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(circpath,imgpath,baseres,questtext))
+
+	cid=int(_cursor.fetchall()[0][0])
+	print('CircuitID = '+str(cid))
 
 	#should be a cycle
 	#for prob in randomsolutions:
@@ -31,10 +40,11 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 
 	specific_res='rip'
 
-	print('EXEC sp_CreateExercise '+str(cid)+',\''+questtype+'\',\''+compname+'\','+str(correct_answer)+','+str(ws1)+','+str(ws2)+','+str(ws3)+',\''+specific_res+'\';')
+	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws1,ws2,ws3,specific_res))
+	print(_cursor.fetchall())
 
 def main(argv):
-	handler('example1.cir','cir.png','Test question','V','R1')
+	handler(argv[1],'cir.png','Test question','V','R1')
 
 if __name__ == '__main__':
         main(sys.argv)
