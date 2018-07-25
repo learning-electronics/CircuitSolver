@@ -8,7 +8,12 @@ sys.path+=['mna/']
 from mnaModule import mna
 from respSel import get_solution 
 
+import MySQLdb as mysql
+
 def handler(circpath,imgpath,questtext,questtype,compname):
+	_connect=mysql.connect(user='ele',passwd='itsucks',host='localhost', db='CIRCUITDB')
+	_cursor=_connect.cursor()
+
 	circ=run_parser(circpath)
 	mnastuff=mna(circ)
 	#print(mnastuff)
@@ -16,9 +21,12 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	#get base resolution
 	baseres="This is the base resolution"
 
-	print('EXEC sp_CreateCircuit \''+imgpath+'\',\''+baseres+'\',\''+questtext+'\';')
-	#TODO
-	cid=10101010
+	sqlquery='CALL sp_CreateCircuit(\''+circpath+'\',\''+imgpath+'\',\''+baseres+'\',\''+questtext+'\');'
+	print(sqlquery)
+	_cursor.execute(sqlquery)
+
+	cid=_cursor.fetchall()[0][0]
+	print('CircuitID = '+str(cid))
 
 	#should be a cycle
 	#for prob in randomsolutions:
@@ -31,7 +39,10 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 
 	specific_res='rip'
 
-	print('EXEC sp_CreateExercise '+str(cid)+',\''+questtype+'\',\''+compname+'\','+str(correct_answer)+','+str(ws1)+','+str(ws2)+','+str(ws3)+',\''+specific_res+'\';')
+	sqlquery='CALL sp_CreateExercise('+str(cid)+',\''+questtype+'\',\''+compname+'\','+str(correct_answer)+','+str(ws1)+','+str(ws2)+','+str(ws3)+',\''+specific_res+'\');'
+	print(sqlquery)
+	_cursor.execute(sqlquery)
+	print(_cursor.fetchall())
 
 def main(argv):
 	handler('example1.cir','cir.png','Test question','V','R1')
