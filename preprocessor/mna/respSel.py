@@ -19,7 +19,7 @@ def get_tension_elem(circ,mnao,elem):
 	br=circ.getBranchCompName(elem)
 	assert br!=None,'Element '+elem+' does not exist'
 	nodes=br.getNodes()
-	print(nodes)
+	#print(nodes)
 	return get_tension_node(circ,mnao,nodes[0])-get_tension_node(circ,mnao,nodes[1])
 
 def get_solution(circ,mnao,elem,questtype):
