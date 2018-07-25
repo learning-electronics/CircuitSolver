@@ -20,38 +20,48 @@ def circuit2na(circuit):
             continue
         else:
             eqs.append(nodeEq(circuit,n))
-    for eq in depEqs(circuit):
-        eqs.append(eq)
 
-    res='\\left \\{ \\begin{matrix} '
-    for eq in eqs:
-        if res != '\\left \\{ \\begin{matrix} ':
-            res+= ' \\\\ '
-        res+=eq
-    res+=' \\end{matrix}\\right.'
+    res=eqs2latex(eqs)
+    eqs=depEqs(circuit)
+    if len(eqs)>0:
+        res+=' '+eqs2latex(depEqs(circuit))
     return res
 
-def stepByStep(circuit):
+
+def stepByStepNA(circuit):
 
     info=mna(circuit)
 
-    res='The nodal analysis method consists in writing an equation for each node in a circuit (excepte the reference node, ground node).\n'
+    res = 'Theoretical Definitions:\n\n' \
+          'Node: an electrical point that connects two or more basic circuit elements.\n' \
+          'Nodal voltage: the voltage in a given node referenced to the ground node.\n\n\n'
+
+    res+= 'Introduction to Nodal Analysis: \n\n' \
+          'The nodal analysis method consists in writing an equation for each node in a circuit (except the reference' \
+          ' node, ground node).\n' \
+          'This means that the number of equations in the main system will be the same as the number of nodal ' \
+          'voltages and they are the only independent variables. We must consequently define every current/voltage in' \
+          ' function of the nodal voltages.\n'
+
     res+='In a node the sum of all the currents exiting it is null, thus, for the simpler case, all we have to do is ' \
-         'to sum all the currents and equal them to zero.\n'
+         'to sum all the currents (in function of the nodal voltages) and equal them to zero.\n'
+
     res+='Note that this approach will bring us a problem in some cases, for we can\'t directly tell what is the ' \
-         'current going through a voltage source (in most cases).\n'
-    res+='In these special cases we might have to create a supernode, that is, a node around the voltage source ' \
-         'all the currents exiting it still have to sum up  to zero, thus giving us one equation, but we need two, ' \
-         'for there are two nodes lost in the process, so the second equation will be the relation between the voltages' \
-         ' in each node. This is as complex as the nodal analysis gets, but in some cases you might not have to form a ' \
-         'supernode, if the voltage source is connected to the ground node, you can only just directly define the ' \
-         'voltage of the node being considered, and move on to the other nodes.'
+         'current going through a voltage source.\n' \
+         'In the case of there being a voltage source, we can however directly write an expression that equals the ' \
+         'value of the voltage source to de difference of the nodal voltages amongst which nodes the source is ' \
+         'connected. If one of the nodes is the reference the system is complete. If not, we have to build a new ' \
+         'equation (considering we have to have an equation for each node besides reference). \n' \
+         'This new equations consists of the sum of all the currents in the both nodes of the voltage source, in such' \
+         ' way that the current going through it disappears from the equation, solving our struggle. This concept is ' \
+         'called a supernode, because we are basically considering the whole voltage source as being one big special ' \
+         'node, in the sense that we are adding together all the currents in both ends of it.\n\n'
 
+    res+= 'Besides the main system equations, we might have auxiliary equations to define the current or voltage ' \
+          'values in dependent power sources. It\'s easy to conclude that the number of auxiliary equations is equal ' \
+          'to the number of dependent power sources.\n\n\n'
 
-
-    res+= 'The number of nodes alongside with the number of dependent power sources already define the number of ' \
-          'equations our system will have. Because we have the main equations, that are correspounding to each node ' \
-          'except ground and the auxiliary equations, that define the current or voltage in a dependent component.\n'
+    res+= 'Circuit Explanation:\n\n'
 
     nN=circuit.nodeCnt
     nC=len(circuit.getBranchesWithDep())
@@ -73,37 +83,103 @@ def stepByStep(circuit):
         elif len(brVS_n)>0:
             if brVS_n[0].node1==0 or brVS_n[0].node2==0:
                 res+= 'Node '+str(n)+' has a VS that is directly connected to ground, thus, we can just define this node\'s voltage:\n'
-                res+= superNodeVoltageEq(brVS_n[0])+'\n\n'
+                res+= '$$'+superNodeVoltageEq(brVS_n[0])+'$$\n\n'
 
             else:
                 res += 'Node ' + str(n) + ' has a VS that is between two nodes, so we need to form a Super Node and have two equations, as mentioned previously.\n'
                 res+='The Super Node\'s voltage equation:\n'
-                res+=superNodeVoltageEq(brVS_n[0])+'\n'
+                res+='$$'+superNodeVoltageEq(brVS_n[0])+'$$\n'
                 res += 'And the Super Node\'s current equation:\n'
-                res += superNodeCurrentEq(brVS_n[0]) + '\n\n'
+                res += '$$'+superNodeCurrentEq(brVS_n[0]) + '$$\n\n'
                 nodesDefined.add(brVS_n[0].node1==0)
                 nodesDefined.add(brVS_n[0].node2==0)
 
         else:
             res += 'Node ' + str(n) + ' has no VS\'s connected to it, so we can evaluate directly the currents going through each branch, sum and equal them to zero:\n'
-            res += nodeEq(circuit,n)+'\n\n'
+            res += '$$'+nodeEq(circuit,n)+'$$\n\n'
+
 
     if nC>0:
         res+= 'Now we have to define the auxiliary equations, which is done as follows:\n'
-        res += '\\left \\{ \\begin{matrix} '
-        first=True
-        for eq in depEqs(circuit):
-            if not first:
-                res += ' \\\\ '
-            first=False
-            res += eq
-        res += ' \\end{matrix}\\right.\n\n'
-
+        res+= '$$'+eqs2latex(depEqs(circuit))+'$$\n\n'
     else:
         res+='We have no dependent power sources, so we have obtained all the necessary equations.\n\n'
 
     res+='We have now our fully defined system of equations as follows: \n'
-    res+=circuit2na(circuit)+'\n'
+    res+='$$'+circuit2na(circuit)+'$$\n'
+    return res
+
+
+def stepByStepExercise(circuit,elem,typeOfExercise,mnaVector):
+    branch=circuit.getBranchCompName(elem)
+    if typeOfExercise=='V':
+        return stepByStepVoltage(circuit,branch,mnaVector)
+    elif typeOfExercise=='I':
+        return stepByStepCurrent(circuit,branch,mnaVector)
+    else:
+        return stepByStepPower(circuit,branch,mnaVector)
+
+
+def stepByStepVoltage(circuit,branch,mnaVector):
+    res='After having solved the NA system we already have the voltages for each node, so to obtain the voltage in a' \
+        ' component it\'s very straight-forward, all we have to do is obtain the difference between the voltages in ' \
+        'each end of the component:\n'
+    n1=branch.node1
+    n2=branch.node2
+    if n1!=0 and n2!=0:
+        res += '$$V_{'+branch.comp.name+'} = V_{'+str(n1)+'} - V_{'+str(n2)+'} = '
+        val=mnaVector[n1-1]-mnaVector[n2-1]
+    elif n2==0:
+        res += '$$V_{'+branch.comp.name+'} = V_{'+str(n1)+'} = '
+        val = mnaVector[n1 - 1]
+    else:
+        res += '$$V_{' + branch.comp.name + '} = -V_{' + str(n2) + '} = '
+        val = -mnaVector[n2 - 1]
+    res += str(val) + 'V$$\n'
+
+    return (val,res)
+
+
+def stepByStepCurrent(circuit,branch,mnaVector):
+    res='The way to obtain a current in a component depends on the type of component in question.\n'
+
+    ct=branch.comp.ctype
+
+    if ct=='R':
+        res+='In a resistor, as we know, we can obtain the current in it from the nodal voltages and its value:\n'
+        res+='$$I_{'+branch.comp.name+'} = '+currentInResistor(branch,branch.node1)+' = '
+        val=currentInResistor_value(branch,branch.node1,mnaVector)
+    elif ct=='V' or ct=='VCVS' or ct=='CCVS':
+        res+='In a voltage source, the only way to obtain the current going through it is to sum all the  currents ' \
+             'going through one of its nodes:\n'
+        if branch.node1!=0:
+            n=branch.node1
+        else:
+            n=branch.node2
+        res += '$$I_{' + branch.comp.name + '} = ' + currentInVS(circuit,branch,n) + ' = '
+        val = currentInVS_value(circuit,branch,n, mnaVector)
+    else: # ct==CS:
+        res += 'In a current source, the current is defined by the current value, obviously:\n'
+        res += '$$I_{' + branch.comp.name + '} = ' + currentInCS(circuit,branch, branch.node1) + ' = '
+        val = currentInCS_value(circuit,branch,branch.node1, mnaVector)
+
+    res += str(val) + 'A$$\n'
+    return (val,res)
+
+
+def stepByStepPower(circuit,branch,mnaVector):
+    pass
+
+
+def eqs2latex(eqs):
+    res='\\left \\{ \\begin{matrix} '
+    first=True
+    for eq in eqs:
+        if not first:
+            res += ' \\\\ '
+        first = False
+        res += eq
+    res += ' \\end{matrix}\\right.'
     return res
 
 
@@ -113,6 +189,13 @@ def currentInBranch(circuit,branch,beginningNode):
     elif branch.comp.ctype=='I' or branch.comp.ctype=='CCCS' or branch.comp.ctype=='VCCS':
         return currentInCS(branch,beginningNode)
     return currentInVS(circuit,branch,beginningNode)
+
+def currentInBranch_value(circuit,branch,beginningNode,mnaVector):
+    if branch.comp.ctype=='R':
+        return currentInResistor_value(branch,beginningNode,mnaVector)
+    elif branch.comp.ctype=='I' or branch.comp.ctype=='CCCS' or branch.comp.ctype=='VCCS':
+        return currentInCS_value(branch,beginningNode,mnaVector)
+    return currentInVS_value(circuit,branch,beginningNode,mnaVector)
 
 
 def currentInVS(circuit, branch, beginningNode):
@@ -124,13 +207,40 @@ def currentInVS(circuit, branch, beginningNode):
             if res != '':
                 res += ' + '
             res += currentInBranch(circuit, br, beginningNode)
-    return res
+    return '-1 \\times ('+res+')'
+
+
+def currentInVS_value(circuit, branch, beginningNode,mnaVector):
+    value=0
+    for br in circuit.getBranchesNode(beginningNode):
+        if br == branch:
+            continue
+        else:
+            value -= currentInBranch_value(circuit, br, beginningNode,mnaVector)
+    return value
 
 
 def currentInCS(branch, beginningNode):
+    if branch.comp.ctype=='I':
+        val=str(branch.comp.value)
+    else:
+        val=branch.comp.name
     if branch.node1 == beginningNode:
-        return branch.comp.name
-    return '-' + branch.comp.name
+        return val
+    return '-' + val
+
+def currentInCS_value(circuit,branch, beginningNode,mnaVector):
+    if branch.comp.ctype=='I':
+        val=branch.comp.value
+    elif branch.comp.ctype=='CCCS':
+        val=branch.comp.value*currentInBranch_value(circuit,branch.comp.dependent,branch.comp.dependent.node1,mnaVector)
+    else:
+        n1=branch.comp.dependent.node1
+        n2=branch.comp.dependent.node2
+        val=branch.comp.value*(mnaVector[n1-1]-mnaVector[n2-1])
+    if branch.node1 == beginningNode:
+        return val
+    return '-' + val
 
 
 def currentInResistor(branch,beginningNode):
@@ -146,12 +256,36 @@ def currentInResistor(branch,beginningNode):
     else:
         return '\\frac{V_{' + str(beginningNode) + '}}{' + resistor + '}'
 
-def powerInBranch(circuit,branch,beginningNode):
+
+def currentInResistor_value(branch,beginningNode,mnaVector):
+    if branch.node1==beginningNode:
+        endingNode=branch.node2
+    else:
+        endingNode = branch.node1
+    resistor=branch.comp.value
+    if endingNode!=0 and beginningNode!=0:
+        return (mnaVector[beginningNode-1]-mnaVector[endingNode-1])/resistor
+    elif beginningNode==0:
+        return -mnaVector[endingNode-1]/resistor
+    else:
+        return mnaVector[beginningNode-1]/resistor
+
+
+def powerInBranch(circuit,branch):
     if branch.comp.ctype=='R':
         return powerInResistor(branch)
     elif branch.comp.ctype=='I' or branch.comp.ctype=='CCCS' or branch.comp.ctype=='VCCS':
         return powerInCS(branch)
-    return powerInVS(circuit,branch,beginningNode)
+    return powerInVS(circuit,branch)
+
+
+def powerInBranch_value(circuit,branch,mnaVector):
+    if branch.comp.ctype=='R':
+        return powerInResistor_value(branch,mnaVector)
+    elif branch.comp.ctype=='I' or branch.comp.ctype=='CCCS' or branch.comp.ctype=='VCCS':
+        return powerInCS_value(branch,mnaVector)
+    return powerInVS_value(circuit,branch,mnaVector)
+
 
 def powerInResistor(branch):
     n1=branch.node1
@@ -162,26 +296,73 @@ def powerInResistor(branch):
     elif n2==0:
         return '\\frac{ - V_{' + str(n1) + '}^{2}}{' + resistor + '}'
     else:
-        return '\\frac{V_{' + str(n1) + '}^{2}}{' + resistor + '}'
+        return '\\frac{V_{' + str(n2) + '}^{2}}{' + resistor + '}'
 
 
-def powerInVS(circuit,branch,beginningNode):
+def powerInResistor_value(branch,mnaVector):
+    n1=branch.node1
+    n2=branch.node2
+    resistor=branch.comp.value
+    if n1!=0 and n2!=0:
+        return (mnaVector[n1-1]-mnaVector[n2-1])**2/resistor
+    elif n2==0:
+        return mnaVector[n1-1]**2/resistor
+    else:
+        return mnaVector[n2-1]**2/resistor
+
+
+def powerInVS(circuit,branch):
+    if branch.node1!=0:
+        beginningNode=branch.node1
+    else:
+        beginningNode=branch.node2
     return '\\left |'+branch.comp.name+' \\times ('+currentInVS(circuit,branch,beginningNode)+') \\right |'
 
 
+def powerInVS_value(circuit,branch,mnaVector):
+    if branch.node1!=0:
+        beginningNode=branch.node1
+    else:
+        beginningNode=branch.node2
+    return abs(branch.comp.value*currentInVS_value(circuit,branch,beginningNode,mnaVector))
+
+
 def powerInCS(branch):
-    return '\\left |' + branch.comp.name + ' \\times ( V_{'+str(branch.node1)+'} - V_{'+str(branch.node2)+'} ) \\right |'
+    n1 = branch.node1
+    n2 = branch.node2
+    if n1!=0 and n2!=0:
+        return '\\left |'+branch.comp.name+' \\times ( V_{' +str(n1)+'} - V_{'+str(n2)+'} ) \\right |'
+    elif n2==0:
+        return '\\left |'+branch.comp.name+' \\times V_{'+str(n1)+'} \\right |'
+    else:
+        return '\\left |'+branch.comp.name+' \\times V_{'+str(n2)+'} \\right |'
+
+
+
+def powerInCS_value(branch,mnaVector):
+    n1 = branch.node1
+    n2 = branch.node2
+    if n1!=0 and n2!=0:
+        return abs(branch.comp.value*(mnaVector[n1-1]-mnaVector[n2-1]))
+    elif n2==0:
+        return abs(branch.comp.value*mnaVector[n1-1])
+    else:
+        return abs(branch.comp.value*-mnaVector[n2-1])
 
 
 def superNodeVoltageEq(branch):
     n1=branch.node1
     n2=branch.node2
 
+    if branch.comp.ctype=='V':
+        val=str(branch.comp.value)
+    else:
+        val=branch.comp.name
     if n1==0:
-        return 'V_{' + str(n2) + '} = -'+branch.comp.name
+        return 'V_{' + str(n2) + '} = -'+val
     elif n2==0:
-        return 'V_{' + str(n1) + '} = ' + branch.comp.name
-    return 'V_{' + str(n1) + '} - V_{' + str(n2) + '} = ' + branch.comp.name
+        return 'V_{' + str(n1) + '} = ' + val
+    return 'V_{' + str(n1) + '} - V_{' + str(n2) + '} = ' + val
 
 def nodeEq(c,node):
     br=c.getBranchesNode(node)

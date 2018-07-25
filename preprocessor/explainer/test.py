@@ -4,7 +4,7 @@ sys.path.insert(0, '../mna')
 from datastructure import Circuit,Branch,Component
 from mnaModule import mna
 from circuit2na import circuit2na
-from circuit2na import stepByStep
+from circuit2na import stepByStepNA
 c = Circuit()
 
 
@@ -62,4 +62,4 @@ R = info.get('R')
 
 latt=circuit2na(c)
 
-res=stepByStep(c)
+res=stepByStepNA(c)
