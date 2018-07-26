@@ -110,7 +110,7 @@ def stepByStepNA(circuit,mnaVector):
     res+='$$'+circuit2na(circuit)+'$$\n\n'
     res+='After solving this system we obtain the following nodal voltages:\n'
     res+='$$'+eqs2latex(mnaVector2eqs(mnaVector,circuit.nodeCnt))+'$$\n\n'
-
+    res = res.replace("--", "")
     return res
 
 
@@ -128,19 +128,9 @@ def stepByStepVoltage(circuit,branch,mnaVector):
     res='After having solved the NA system we already have the voltages for each node, so to obtain the voltage in a' \
         ' component it\'s very straight-forward, all we have to do is obtain the difference between the voltages in ' \
         'each end of the component:\n'
-    n1=branch.node1
-    n2=branch.node2
-    if n1!=0 and n2!=0:
-        res += '$$V_{'+branch.comp.name+'} = V_{'+str(n1)+'} - V_{'+str(n2)+'} = '
-        val=mnaVector[n1-1][0]-mnaVector[n2-1][0]
-    elif n2==0:
-        res += '$$V_{'+branch.comp.name+'} = V_{'+str(n1)+'} = '
-        val = mnaVector[n1 - 1][0]
-    else:
-        res += '$$V_{' + branch.comp.name + '} = -V_{' + str(n2) + '} = '
-        val = -mnaVector[n2 - 1][0]
+    res += '$$V_{'+branch.comp.name+'} = '+voltageInBranch(branch,branch.node1)+' = '
+    val=voltageInBranch_value(branch,branch.node1,mnaVector)
     res += str(val) + 'V$$\n'
-
     return (val,res)
 
 
@@ -214,9 +204,34 @@ def eqs2latex(eqs):
 
 def mnaVector2eqs(mnaVector,nc):
     eqs=[]
-    for n in range(nc):
+    for n in range(nc-1):
         eqs.append('V_{'+str(n+1)+'} = '+str(mnaVector[n][0]))
     return eqs
+
+def voltageInBranch(branch,beginningNode):
+    if branch.node1==beginningNode:
+        endingNode=branch.node2
+    else:
+        endingNode=branch.node1
+    if endingNode!=0 and beginningNode!=0:
+        return 'V_{'+str(beginningNode)+'} - V_{'+str(endingNode)+'}'
+    elif beginningNode==0:
+        return '-V_{' + str(endingNode) + '}'
+    else:
+        return 'V_{' + str(beginningNode) + '}'
+
+
+def voltageInBranch_value(branch,beginningNode,mnaVector):
+    if branch.node1==beginningNode:
+        endingNode=branch.node2
+    else:
+        endingNode=branch.node1
+    if endingNode!=0 and beginningNode!=0:
+        return mnaVector[beginningNode-1][0]-mnaVector[endingNode-1][0]
+    elif beginningNode==0:
+        return -mnaVector[endingNode-1][0]
+    else:
+        return mnaVector[beginningNode-1][0]
 
 
 def currentInBranch(circuit,branch,beginningNode):
@@ -273,41 +288,21 @@ def currentInCS_value(circuit,branch, beginningNode,mnaVector):
         val=branch.comp.value
     elif branch.comp.ctype=='CCCS':
         val=branch.comp.value*currentInBranch_value(circuit,branch.comp.dependent,branch.comp.dependent.node1,mnaVector)
-    else:
-        n1=branch.comp.dependent.node1
-        n2=branch.comp.dependent.node2
-        val=branch.comp.value*(mnaVector[n1-1][0]-mnaVector[n2-1][0])
+    else:#vccs
+        val=branch.comp.value*voltageInBranch_value(branch.comp.dependent,branch.comp.dependent.node1,mnaVector)
     if branch.node1 == beginningNode:
         return val
     return -val
 
 
 def currentInResistor(branch,beginningNode):
-    if branch.node1==beginningNode:
-        endingNode=branch.node2
-    else:
-        endingNode = branch.node1
     resistor=branch.comp.name
-    if endingNode!=0 and beginningNode!=0:
-        return '\\frac{V_{'+str(beginningNode)+'} - V_{'+str(endingNode)+'}}{'+resistor+'}'
-    elif beginningNode==0:
-        return '\\frac{ - V_{' + str(endingNode) + '}}{' + resistor + '}'
-    else:
-        return '\\frac{V_{' + str(beginningNode) + '}}{' + resistor + '}'
+    return '\\frac{'+voltageInBranch(branch,beginningNode)+'}{'+resistor+'}'
 
 
 def currentInResistor_value(branch,beginningNode,mnaVector):
-    if branch.node1==beginningNode:
-        endingNode=branch.node2
-    else:
-        endingNode = branch.node1
     resistor=branch.comp.value
-    if endingNode!=0 and beginningNode!=0:
-        return (mnaVector[beginningNode-1][0]-mnaVector[endingNode-1][0])/resistor
-    elif beginningNode==0:
-        return -mnaVector[endingNode-1][0]/resistor
-    else:
-        return mnaVector[beginningNode-1][0]/resistor
+    return voltageInBranch_value(branch,beginningNode,mnaVector)/resistor
 
 
 def powerInBranch(circuit,branch):
@@ -327,27 +322,13 @@ def powerInBranch_value(circuit,branch,mnaVector):
 
 
 def powerInResistor(branch):
-    n1=branch.node1
-    n2=branch.node2
     resistor=branch.comp.name
-    if n1!=0 and n2!=0:
-        return '\\frac{(V_{'+str(n1)+'} - V_{'+str(n2)+'})^{2}}{'+resistor+'}'
-    elif n2==0:
-        return '\\frac{ - V_{' + str(n1) + '}^{2}}{' + resistor + '}'
-    else:
-        return '\\frac{V_{' + str(n2) + '}^{2}}{' + resistor + '}'
+    return '\\frac{('+voltageInBranch(branch,branch.node1)+')^{2}}{'+resistor+'}'
 
 
 def powerInResistor_value(branch,mnaVector):
-    n1=branch.node1
-    n2=branch.node2
     resistor=branch.comp.value
-    if n1!=0 and n2!=0:
-        return (mnaVector[n1-1][0]-mnaVector[n2-1][0])**2/resistor
-    elif n2==0:
-        return mnaVector[n1-1][0]**2/resistor
-    else:
-        return mnaVector[n2-1][0]**2/resistor
+    return voltageInBranch_value(branch,branch.node1,mnaVector)**2/resistor
 
 
 def powerInVS(circuit,branch):
@@ -378,51 +359,32 @@ def powerInVS_value(circuit,branch,mnaVector):
     elif ct=='CCVS':
         val=branch.comp.value*currentInBranch_value(circuit,branch.comp.dependent.comp.name,branch.comp.dependent.node1,mnaVector)
     else: #'VCVS'
-        val=branch.comp.value*stepByStepVoltage(circuit,branch.comp.dependent,mnaVector)[0]
+        val=branch.comp.value*voltageInBranch_value(branch.comp.dependent,branch.comp.dependent.node1,mnaVector)
     return abs(val*currentInVS_value(circuit,branch,beginningNode,mnaVector))
 
 
 def powerInCS(circuit,branch):
     n1 = branch.node1
-    n2 = branch.node2
     val=currentInCS(circuit,branch,n1)
-    if n1!=0 and n2!=0:
-        return '\\left |'+val+' \\times ( V_{' +str(n1)+'} - V_{'+str(n2)+'} ) \\right |'
-    elif n2==0:
-        return '\\left |'+val+' \\times V_{'+str(n1)+'} \\right |'
-    else:
-        return '\\left |'+val+' \\times V_{'+str(n2)+'} \\right |'
+    return '\\left |'+val+' \\times ('+voltageInBranch(branch,n1)+') \\right |'
 
 
 
 def powerInCS_value(circuit,branch,mnaVector):
     n1 = branch.node1
-    n2 = branch.node2
     val=currentInBranch_value(circuit,branch,n1,mnaVector)
-    if n1!=0 and n2!=0:
-        return abs(val*(mnaVector[n1-1][0]-mnaVector[n2-1][0]))
-    elif n2==0:
-        return abs(val*mnaVector[n1-1][0])
-    else:
-        return abs(val*-mnaVector[n2-1][0])
+    return abs(val*voltageInBranch_value(branch,n1,mnaVector))
 
 
 def superNodeVoltageEq(circuit,branch):
-    n1=branch.node1
-    n2=branch.node2
     ct=branch.comp.ctype
-
     if ct=='V':
         val=str(branch.comp.value)
     elif ct=='CCVS':
         val=str(branch.comp.value)+' \\times I_{'+branch.comp.dependent.comp.name+'}'
     else: #'VCVS'
         val = str(branch.comp.value) + ' \\times V_{' + branch.comp.dependent.comp.name + '}'
-    if n1==0:
-        return 'V_{' + str(n2) + '} = -'+val
-    elif n2==0:
-        return 'V_{' + str(n1) + '} = ' + val
-    return 'V_{' + str(n1) + '} - V_{' + str(n2) + '} = ' + val
+    return voltageInBranch(branch,branch.node1)+' = ' + val
 
 def nodeEq(c,node):
     br=c.getBranchesNode(node)
@@ -481,12 +443,7 @@ def depEqs(c):
                 eq+=currentInCS(b.comp.dependent,b.comp.dependent.node1)
         elif b.comp.ctype=='VCVS' or b.comp.ctype=='VCCS':
             eq = 'V_{' + b.comp.dependent.comp.name + '} = '
-            if b.comp.dependent.node1==0:
-                eq += '-V_{' + str(b.comp.dependent.node2) + '}'
-            elif b.comp.dependentnode2==0:
-                eq += 'V_{' + str(b.comp.dependent.node1) + '}'
-            else:
-                eq+='(V_{'+str(b.comp.dependent.node1)+'}-V_{'+str(b.comp.dependent.node2)+'})'
+            eq+=voltageInBranch(b,b.node1)
         eqs.append(eq)
 
     return eqs
