@@ -9,7 +9,7 @@ from mnaModule import mna
 from respSel import get_solution 
 
 sys.path+=['explainer/']
-from circuit2na import stepByStepNA 
+from circuit2na import stepByStepNA,stepByStepExercise 
 
 import MySQLdb as mysql
 
@@ -22,7 +22,7 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	#print(mnastuff)
 
 	#get base resolution
-	baseres=stepByStepNA(circ)
+	baseres=stepByStepNA(circ,mnastuff['x'])
 
 	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(circpath,imgpath,baseres,questtext))
 
@@ -31,14 +31,18 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 
 	#should be a cycle
 	#for prob in randomsolutions:
-	correct_answer=get_solution(circ,mnastuff,compname,questtype)
+	#correct_answer=get_solution(circ,mnastuff,compname,questtype)
+
+	correct_answer,specific_res=stepByStepExercise(circ,compname,questtype,mnastuff['x'])
+
+	#print(correct_answer)
+	#print(specific_res)
 
 	#TODO
 	ws1=-1
 	ws2=-2
 	ws3=-3
 
-	specific_res='rip'
 
 	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws1,ws2,ws3,specific_res))
 	print(_cursor.fetchall())
