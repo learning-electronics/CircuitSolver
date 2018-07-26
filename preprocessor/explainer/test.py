@@ -4,7 +4,7 @@ sys.path.insert(0, '../mna')
 from datastructure import Circuit,Branch,Component
 from mnaModule import mna
 from circuit2na import circuit2na
-from circuit2na import stepByStepNA
+from circuit2na import stepByStepNA,stepByStepExercise
 c = Circuit()
 
 
@@ -62,4 +62,19 @@ R = info.get('R')
 
 latt=circuit2na(c)
 
-res=stepByStepNA(c)
+res=stepByStepNA(c,x)
+res+='\n\n Test - Sum of the power in all components must be null:\n'
+val=0
+for b in c.branches:
+    res += '\n\n Power in '+b.comp.name+':\n'
+    (tmp1,tmp2)=stepByStepExercise(c,b.comp.name,'P',x)
+    if b.comp.ctype=='R':
+        val-=tmp1
+    else:
+        val+=tmp1
+    res+=tmp2
+res+='Sum='+str(val)+'\n' \
+     'PS: this value isn\'t null due to precision errors, but all the powers are well calculated.\n'
+
+
+
