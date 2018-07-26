@@ -9,7 +9,7 @@ from mnaModule import mna
 from respSel import get_solution 
 
 sys.path+=['explainer/']
-from circuit2na import stepByStep 
+from circuit2na import stepByStepNA 
 
 import MySQLdb as mysql
 
@@ -22,7 +22,7 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	#print(mnastuff)
 
 	#get base resolution
-	baseres=stepByStep(circ)
+	baseres=stepByStepNA(circ)
 
 	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(circpath,imgpath,baseres,questtext))
 

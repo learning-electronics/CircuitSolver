@@ -69,8 +69,19 @@ class spiceExtractor(spiceListener):
 
 		_val=float(_val)
 
+		if ctx.name.text[0]=='E':
+			_comp='VCVS'
+		elif ctx.name.text[0]=='F':
+			_comp='CCCS'
+		elif ctx.name.text[0]=='G':
+			_comp='VCCS'
+		elif ctx.name.text[0]=='H':
+			_comp='CCVS'
+		else:
+			_comp=ctx.name.text[0]
+
 		#Create a Component
-		_c=Component(ctx.name.text,Component.convertSI(_val,_scale),ctx.name.text[0],_dep) #Check ctype, value, scale
+		_c=Component(ctx.name.text,Component.convertSI(_val,_scale),_comp,_dep) #Check ctype, value, scale
 
 		#Place inside branch
 		_b=Branch(int(ctx.nodes(0).n1.text),int(ctx.nodes(0).n2.text),_c)
