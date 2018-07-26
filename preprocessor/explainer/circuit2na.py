@@ -1,18 +1,30 @@
-import sys
-sys.path.insert(0, '../mna')
-from mnaModule import mna
-
 def circuit2na(circuit):
     eqs=list() #list of equations in LaTeX
 
     brVS=circuit.getBranchesWithVS()
-    nodesDefined=set()
-    for b in brVS:
-        nodesDefined.add(b.node1)
-        nodesDefined.add(b.node2)
 
-        eqs.append(superNodeVoltageEq(circuit,b))
-        tmp=superNodeCurrentEq(circuit,b)
+    brVSgroups=list() #list of groups of VS that are connected to the same nodes, to build supernodes
+    nodesDefined=set() #modes already defined on the supernodes equations
+    idxAdded=set() #index of the list brVS that has already been added to the groups
+
+    for i in range(len(brVS)):
+        if i in idxAdded:
+            continue
+
+        brVSgroups.append(set())
+        brVSgroups[-1].add(brVS[i])
+        idxAdded.add(i)
+        for j in range(i+1,len(brVS)):
+            if brVS[i].node1==brVS[j].node1!=0 or brVS[i].node2==brVS[j].node2!=0 or brVS[i].node2==brVS[j].node1!=0 or brVS[i].node1==brVS[j].node2!=0:
+                brVSgroups[-1].add(brVS[j])
+
+    for bGroups in brVSgroups:
+        for b in bGroups:
+            nodesDefined.add(b.node1)
+            nodesDefined.add(b.node2)
+        for eq in superNodeVoltageEq(circuit,bGroups):
+            eqs.append(eq)
+        tmp=superNodeCurrentEq(circuit,bGroups)
         if tmp!=None:
             eqs.append(tmp)
     for n in range(circuit.nodeCnt):
@@ -71,34 +83,66 @@ def stepByStepNA(circuit,mnaVector):
 
     res += '\n\nStarting to define the main equations:\n\n'
 
-    nodesDefined=set()
-    brVS=circuit.getBranchesWithVS()
-    for n in range(1,nN):
+    brVS = circuit.getBranchesWithVS()
+
+    brVSgroups = list()  # list of groups of VS that are connected to the same nodes, to build supernodes
+    nodesDefined = set()  # modes already defined on the supernodes equations
+    idxAdded = set()  # index of the list brVS that has already been added to the groups
+
+    for i in range(len(brVS)):
+        if i in idxAdded:
+            continue
+
+        brVSgroups.append(set())
+        brVSgroups[-1].add(brVS[i])
+        idxAdded.add(i)
+        #TODO: MAKE SURE THIS DOESNT ONLY WORK IN ONE LEVEL , MEANING IT WILL NOT RETURN TWO VOLTAGE SOURCES THAT ARE CONNECTED THROUGH A THIRD
+        for j in range(i + 1, len(brVS)):
+            if brVS[i].node1 == brVS[j].node1!=0 or brVS[i].node2 == brVS[j].node2!=0 or brVS[i].node2 == brVS[j].node1!=0 or \
+                    brVS[i].node1 == brVS[j].node2!=0:
+                brVSgroups[-1].add(brVS[j])
+
+    for bGroups in brVSgroups:
+        nodesInGroup = set()
+        for b in bGroups:
+            nodesInGroup.add(b.node1)
+            nodesInGroup.add(b.node2)
+
+        if len(nodesInGroup) == 2 and 0 in nodesInGroup:
+            nodesInGroup=list(nodesInGroup)
+            if nodesInGroup[0]==0:
+                n=nodesInGroup[1]
+            else:
+                n=nodesInGroup[0]
+            res += 'Node ' + str(n) + ' has a VS that is directly connected to ground, thus, we can just define this node\'s voltage:\n'
+            res += '$$'
+            for eq in superNodeVoltageEq(circuit, bGroups):
+                res += eq
+            res += '$$\n\n'
+        else:
+            res += 'Nodes '
+            for n in nodesInGroup:
+                if n != 0:
+                    res += str(n) + ' '
+            res += 'constitute a supernode, thus we have a voltage equation that relates the nodal voltages ' \
+                   'and the voltage value for each branch:\n'
+            res += '$$' + eqs2latex(superNodeVoltageEq(circuit, bGroups)) + '$$\n'
+            if 0 in nodesInGroup:
+                res += 'As one of the VS\'s is connected to ground, the equations above are enough to define the ' \
+                       'supernode.\n\n'
+            else:
+                res += 'As none of the VS\'s is connected to ground we must also create a current equation for the ' \
+                       'supernode:\n'
+                res += '$$' + superNodeCurrentEq(brVS_n[0]) + '$$\n\n'
+        nodesDefined = nodesDefined.union(nodesInGroup)
+
+    for n in range(circuit.nodeCnt):
         if n in nodesDefined:
             continue
-        nodesDefined.add(n)
-        brVS_n=list(filter(lambda x: x.node1==n or x.node2==n,brVS))
-        if len(brVS_n)>1:
-            res+= 'ERROR: THIS ALGORITHM DOESN\'T WORK FOR CASES IN WHICH TWO VS ARE CONNECTED TO THE SAME NODE'
-            return res
-        elif len(brVS_n)>0:
-            if brVS_n[0].node1==0 or brVS_n[0].node2==0:
-                res+= 'Node '+str(n)+' has a VS that is directly connected to ground, thus, we can just define this node\'s voltage:\n'
-                res+= '$$'+superNodeVoltageEq(circuit,brVS_n[0])+'$$\n\n'
-
-            else:
-                res += 'Node ' + str(n) + ' has a VS that is between two nodes, so we need to form a Super Node and have two equations, as mentioned previously.\n'
-                res+='The Super Node\'s voltage equation:\n'
-                res+='$$'+superNodeVoltageEq(brVS_n[0])+'$$\n'
-                res += 'And the Super Node\'s current equation:\n'
-                res += '$$'+superNodeCurrentEq(brVS_n[0]) + '$$\n\n'
-                nodesDefined.add(brVS_n[0].node1==0)
-                nodesDefined.add(brVS_n[0].node2==0)
-
         else:
-            res += 'Node ' + str(n) + ' has no VS\'s connected to it, so we can evaluate directly the currents going through each branch, sum and equal them to zero:\n'
-            res += '$$'+nodeEq(circuit,n)+'$$\n\n'
-
+            res += 'Node ' + str(
+                n) + ' has no VS\'s connected to it, so we can evaluate directly the currents going through each branch, sum and equal them to zero:\n'
+            res += '$$' + nodeEq(circuit, n) + '$$\n\n'
 
     if nC>0:
         res+= 'Now we have to define the auxiliary equations, which is done as follows:\n'
@@ -111,6 +155,7 @@ def stepByStepNA(circuit,mnaVector):
     res+='After solving this system we obtain the following nodal voltages:\n'
     res+='$$'+eqs2latex(mnaVector2eqs(mnaVector,circuit.nodeCnt))+'$$\n\n'
     res = res.replace("--", "")
+
     return res
 
 
@@ -238,7 +283,7 @@ def currentInBranch(circuit,branch,beginningNode):
     if branch.comp.ctype=='R':
         return currentInResistor(branch,beginningNode)
     elif branch.comp.ctype=='I' or branch.comp.ctype=='CCCS' or branch.comp.ctype=='VCCS':
-        return currentInCS(branch,beginningNode)
+        return currentInCS(circuit,branch,beginningNode)
     return currentInVS(circuit,branch,beginningNode)
 
 def currentInBranch_value(circuit,branch,beginningNode,mnaVector):
@@ -250,25 +295,59 @@ def currentInBranch_value(circuit,branch,beginningNode,mnaVector):
 
 
 def currentInVS(circuit, branch, beginningNode):
-    res = ''
-    for br in circuit.getBranchesNode(beginningNode):
-        if br == branch:
-            continue
-        else:
-            if res != '':
-                res += ' + '
-            res += currentInBranch(circuit, br, beginningNode)
-    return '-1 \\times ('+res+')'
+    if branch.node1==beginningNode:
+        endingNode=branch.node2
+    else:
+        endingNode=branch.node1
+
+    nds_beg,brs_beg = nonVSbranchesConnectedToBranchThroughNode(circuit, branch, beginningNode)
+    nds_end,brs_end = nonVSbranchesConnectedToBranchThroughNode(circuit, branch, endingNode)
+
+    if brs_beg==None and brs_end==None:
+        return 'ERROR: IMPOSSIBILITY TO EVALUATE CURRENT IN BRANCH '+str(branch.getNodes())
+    if brs_beg==None or (brs_beg!=None and brs_end!=None and len(brs_end)>len(brs_beg)):
+        nds=nds_end
+        brs=brs_end
+        res = '-'
+    else:
+        nds = nds_beg
+        brs = brs_beg
+        res = ''
+
+    first=True
+    for i in range(len(brs)):
+        if not first:
+            res += ' + '
+        res += currentInBranch(circuit, brs[i], nds[i])
+    return '('+res+')'
 
 
 def currentInVS_value(circuit, branch, beginningNode,mnaVector):
-    value=0
-    for br in circuit.getBranchesNode(beginningNode):
-        if br == branch:
-            continue
-        else:
-            value -= currentInBranch_value(circuit, br, beginningNode,mnaVector)
-    return value
+    if branch.node1==beginningNode:
+        endingNode=branch.node2
+    else:
+        endingNode=branch.node1
+
+    nds_beg,brs_beg = nonVSbranchesConnectedToBranchThroughNode(circuit, branch, beginningNode)
+    nds_end,brs_end = nonVSbranchesConnectedToBranchThroughNode(circuit, branch, endingNode)
+
+    if brs_beg==None and brs_end==None:
+        return 'ERROR: IMPOSSIBILITY TO EVALUATE CURRENT IN BRANCH '+str(branch.getNodes())
+    if brs_beg==None or (brs_beg!=None and brs_end!=None and len(brs_end)>len(brs_beg)):
+        nds=nds_end
+        brs=brs_end
+        invert=True
+    else:
+        nds = nds_beg
+        brs = brs_beg
+        invert=False
+
+    res=0
+    for i in range(len(brs)):
+        res += currentInBranch_value(circuit, brs[i], nds[i],mnaVector)
+    if invert:
+        res *= -1
+    return res
 
 
 def currentInCS(circuit,branch, beginningNode):
@@ -376,16 +455,6 @@ def powerInCS_value(circuit,branch,mnaVector):
     return abs(val*voltageInBranch_value(branch,n1,mnaVector))
 
 
-def superNodeVoltageEq(circuit,branch):
-    ct=branch.comp.ctype
-    if ct=='V':
-        val=str(branch.comp.value)
-    elif ct=='CCVS':
-        val=str(branch.comp.value)+' \\times I_{'+branch.comp.dependent.comp.name+'}'
-    else: #'VCVS'
-        val = str(branch.comp.value) + ' \\times V_{' + branch.comp.dependent.comp.name + '}'
-    return voltageInBranch(branch,branch.node1)+' = ' + val
-
 def nodeEq(c,node):
     br=c.getBranchesNode(node)
 
@@ -399,6 +468,18 @@ def nodeEq(c,node):
             eq += currentInCS(c,b,node)
     eq+=' = 0'
     return eq
+
+
+def superNodeVoltageEq(circuit,branch):
+    ct=branch.comp.ctype
+    if ct=='V':
+        val=str(branch.comp.value)
+    elif ct=='CCVS':
+        val=str(branch.comp.value)+' \\times I_{'+branch.comp.dependent.comp.name+'}'
+    else: #'VCVS'
+        val = str(branch.comp.value) + ' \\times V_{' + branch.comp.dependent.comp.name + '}'
+    return voltageInBranch(branch,branch.node1)+' = ' + val
+
 
 def superNodeCurrentEq(c,branch):
     n1=branch.node1
@@ -429,6 +510,49 @@ def superNodeCurrentEq(c,branch):
 
     return eq
 
+
+def superNodeVoltageEq(circuit,branch):
+    eqs=list()
+    for b in branch:
+        ct=b.comp.ctype
+        if ct=='V':
+            val=str(b.comp.value)
+        elif ct=='CCVS':
+            val=str(b.comp.value)+' \\times I_{'+b.comp.dependent.comp.name+'}'
+        else: #'VCVS'
+            val = str(b.comp.value) + ' \\times V_{' + b.comp.dependent.comp.name + '}'
+        eqs.append(voltageInBranch(b,b.node1)+' = ' + val)
+    return eqs
+
+
+def superNodeCurrentEq(c,branch):
+    nodes=set() #set with all nodes contained in the supernode
+    for b in branch:
+        nodes.add(b.node1)
+        nodes.add(b.node2)
+    if 0 in nodes:
+        return None
+
+    br=set() #branches that are connected to one of the nodes in the supernode
+    for n in nodes:
+        br=br.add(c.getBranchesNode(n))
+    for (n1,n2) in [(nodes[i],nodes[j]) for i in range(len(nodes)) for j in range(i+1, len(nodes))]:
+        br.remove(c.getBranchesNodes([n1,n2])) #removing all branches that belong to the supernode
+    eq=''
+    for b in br:
+        if b.node1 in nodes:
+            n=b.node1
+        else:
+            n = b.node2
+        if eq != '':
+            eq += ' + '
+
+        eq+=currentInBranch(c,b,n)
+    eq += ' = 0'
+
+    return eq
+
+
 def depEqs(c):
     br=c.getBranchesWithDep()
 
@@ -443,8 +567,35 @@ def depEqs(c):
                 eq+=currentInCS(b.comp.dependent,b.comp.dependent.node1)
         elif b.comp.ctype=='VCVS' or b.comp.ctype=='VCCS':
             eq = 'V_{' + b.comp.dependent.comp.name + '} = '
-            eq+=voltageInBranch(b,b.node1)
+            eq+=voltageInBranch(b.comp.dependent,b.comp.dependent.node1)
         eqs.append(eq)
 
     return eqs
 
+
+def nonVSbranchesConnectedToBranchThroughNode(circuit,branch,node):
+    if node==0:
+        return None,None
+    #this method returns a set of branches that are connected to @branch through @node but that aren't VS branches, so
+    # that we can calculate the current in a branch with a VS
+    brs=circuit.getBranchesNode(node)
+    brs.remove(branch)
+    beginningNodes=list()
+    for i in range(len(brs)):
+        beginningNodes.append(node)
+    for br in brs:
+        if br.comp.ctype=='V' or br.comp.ctype=='CCVS' or br.comp.ctype=='VCVS':
+            if br.node1==node:
+                n=br.node2
+            else:
+                n=br.node1
+            if n==0:
+                return None,None
+            for br2 in nonVSbranchesConnectedToBranchThroughNode(circuit,br,n)[1]:
+                if br2 in brs:
+                    beginningNodes.pop(brs.index(br2))
+                    brs.remove(br2)
+                else:
+                    brs.append(br2)
+                    beginningNodes.append(n)
+    return (beginningNodes,brs)

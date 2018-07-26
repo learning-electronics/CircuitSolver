@@ -37,7 +37,6 @@ c.addBranch(b1)
 c.addBranch(b2)
 del b1,b2
 
-
 """
 c.updNodeCnt()
 
@@ -74,7 +73,7 @@ for b in c.branches:
         val+=tmp1
     res+=tmp2
 res+='Sum='+str(val)+'\n' \
-     'PS: this value isn\'t null due to precision errors, but all the powers are well calculated.\n'
+     'PS: this value may not be null due to precision errors, but all the powers are well calculated.\n'
 
 
 
