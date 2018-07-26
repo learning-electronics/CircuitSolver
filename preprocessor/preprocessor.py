@@ -1,3 +1,4 @@
+from os.path import abspath
 import sys
 from datastructure import Circuit,Branch,Component
 
@@ -24,7 +25,8 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	#get base resolution
 	baseres=stepByStepNA(circ,mnastuff['x'])
 
-	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(circpath,imgpath,baseres,questtext))
+	print(abspath(circpath))
+	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(abspath(circpath),abspath(imgpath),baseres,questtext))
 
 	cid=int(_cursor.fetchall()[0][0])
 	print('CircuitID = '+str(cid))
