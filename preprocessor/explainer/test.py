@@ -7,7 +7,7 @@ from circuit2na import circuit2na
 from circuit2na import stepByStepNA,stepByStepExercise
 c = Circuit()
 
-
+"""
  ##CIRCUITO 1
 
 b1 = Branch(0,1,Component('I1',10,'I'))
@@ -27,8 +27,9 @@ c.addBranch(b6)
 c.addBranch(b7)
 c.addBranch(b8)
 del b1,b2,b3,b4,b5,b6,b7,b8
-"""
 
+"""
+"""
 ### CIRCUITO 2
 
 b1 = Branch(1,0,Component('V1',5,'V'))
@@ -38,6 +39,24 @@ c.addBranch(b2)
 del b1,b2
 
 """
+
+### CIRCUITO 3
+
+b1 = Branch(1,0,Component('R1',1000,'R'))
+b2 = Branch(1,0,Component('V1',5,'V'))
+b3 = Branch(1,2,Component('V2',6,'V'))
+b4 = Branch(2,3,Component('V3',8,'V'))
+b5 = Branch(2,0,Component('R2',1000,'R'))
+b6 = Branch(3,0,Component('R3',1000,'R'))
+c.addBranch(b1)
+c.addBranch(b2)
+c.addBranch(b3)
+c.addBranch(b4)
+c.addBranch(b5)
+c.addBranch(b6)
+del b1,b2,b3,b4,b5,b6
+
+
 c.updNodeCnt()
 
 # cf=np.matrix([[ 0.0417, -0.0100, -0.0067, -0.0050,       0,       0,        0,       0],
