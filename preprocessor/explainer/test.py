@@ -93,6 +93,3 @@ for b in c.branches:
     res+=tmp2
 res+='Sum='+str(val)+'\n' \
      'PS: this value may not be null due to precision errors, but all the powers are well calculated.\n'
-
-
-

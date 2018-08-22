@@ -1,30 +1,34 @@
+
+
+# Given a circuit this function returns its system of equations in LaTeX according to nodal analysis
 def circuit2na(circuit):
     eqs=list() #list of equations in LaTeX
 
-    brVS=circuit.getBranchesWithVS()
+    brVS=circuit.getBranchesWithVS()    # obtaining all branches with VS, because these branches will need to be handled
+                                        # differently, considering we can't tell the current going through a VS
 
-    brVSgroups=list() #list of groups of VS that are connected to the same nodes, to build supernodes
-    nodesDefined=set() #modes already defined on the supernodes equations
+    brVSgroups=list() #list of groups (lists) of VS that are connected to the same nodes, to build supernodes
+    nodesDefined=set() #nodes already defined on the supernodes equations
     idxAdded=set() #index of the list brVS that has already been added to the groups
 
     for i in range(len(brVS)):
-        if i in idxAdded:
+        if i in idxAdded: #if the branch has already been added to a group, it can't be in more than one
             continue
 
-        brVSgroups.append(set())
-        brVSgroups[-1].add(brVS[i])
-        idxAdded.add(i)
+        brVSgroups.append(set()) #if the branch hasn't been added to a group, we need to create a new group for it
+        brVSgroups[-1].add(brVS[i]) #add it to the new group
+        idxAdded.add(i) #store the information that this branch has been added
         # TODO: MAKE SURE THIS DOESNT ONLY WORK IN ONE LEVEL , MEANING IT WILL NOT RETURN TWO VOLTAGE SOURCES THAT ARE CONNECTED THROUGH A THIRD
-        for j in range(i + 1, len(brVS)):
-            for br in brVSgroups[-1]:
-                to_add = None
+        for j in range(i + 1, len(brVS)): #for all the resting branches on the list
+            to_add=set()#set of idx to add to this last group
+            for br in brVSgroups[-1]: #for each branch in the last group
                 if br.node1 == brVS[j].node1 != 0 or br.node2 == brVS[j].node2 != 0 or br.node2 == brVS[j].node1 != 0 or \
-                        br.node1 == brVS[j].node2 != 0:
-                    to_add = j
-                    continue
-            if to_add != None:
-                brVSgroups[-1].add(brVS[to_add])
-                idxAdded.add(to_add)
+                        br.node1 == brVS[j].node2 != 0: #if any of the brVS[j] is connected to br
+                    to_add.add(j)
+            if len(to_add)>0:
+                for idx in to_add:
+                    brVSgroups[-1].add(brVS[idx])
+                    idxAdded.add(idx)
 
     for bGroups in brVSgroups:
         for b in bGroups:
@@ -49,40 +53,40 @@ def circuit2na(circuit):
     res = res.replace("--", "")
     return res
 
-
+#Given a circuit and a set of values of nodal voltages (included in the mnaVector, obtained by the MNA) this method
+#returns a string set of the needed steps to obtain the system of equations according to the nodal analysis
 def stepByStepNA(circuit,mnaVector):
 
 
-    res = '<p>Theoretical Definitions:\n\n</p>' \
-          '<p>Node: an electrical point that connects two or more basic circuit elements.\n</p>' \
-          '<p>Nodal voltage: the voltage in a given node referenced to the ground node.\n\n\n</p>'
+    res = '<p><b>Theoretical Definitions:\n\n</b></p>' \
+          '<p><b>Node:</b> an electrical point that connects two or more basic circuit elements.\n</p>' \
+          '<p><b>Nodal voltage:</b> the voltage in a given node referenced to the ground node.\n\n\n</p>'
 
-    res+= '<p>Introduction to Nodal Analysis: \n\n</p>' \
-          '<p>The nodal analysis method consists in writing an equation for each node in a circuit (except the reference' \
-          ' node, ground node).\n</p>' \
+    res+= '<p><b>Introduction to Nodal Analysis: \n\n</b></p>' \
+          '<p>The nodal analysis method consists in writing an equation for each node (except the reference' \
+          ' node, ground node) in a circuit using only as variables the nodal voltages.\n</p>' \
           '<p>This means that the number of equations in the main system will be the same as the number of nodal ' \
-          'voltages and they are the only independent variables. We must consequently define every current/voltage in' \
-          ' function of the nodal voltages.\n</p>'
+          'voltages.\n</p>'
 
     res+='<p>In a node the sum of all the currents exiting it is null, thus, for the simpler case, all we have to do is ' \
-         'to sum all the currents (in function of the nodal voltages) and equal them to zero.\n</p>'
+         'to sum all the currents (in function of the nodal voltages) and equal this sum to zero.\n</p>'
 
-    res+='<p>Note that this approach will bring us a problem in some cases, for we can\'t directly tell what is the ' \
+    res+='<p><b>Note that this approach will bring us a problem in some cases</b>, for we can\'t directly tell what is the ' \
          'current going through a voltage source.\n</p>' \
          '<p>In the case of there being a voltage source, we can however directly write an expression that equals the ' \
-         'value of the voltage source to de difference of the nodal voltages amongst which nodes the source is ' \
-         'connected. If one of the nodes is the reference the system is complete. If not, we have to build a new ' \
+         'value of the voltage source to de difference of the nodal voltages between its nodes. If one of the nodes ' \
+         'is the reference the system is complete. If not, we have to build an additional ' \
          'equation (considering we have to have an equation for each node besides reference). \n</p>' \
-         '<p>This new equations consists of the sum of all the currents in the both nodes of the voltage source, in such' \
+         '<p>This new equation consists of the sum of all the currents in the both nodes of the voltage source, in such' \
          ' way that the current going through it disappears from the equation, solving our struggle. This concept is ' \
-         'called a supernode, because we are basically considering the whole voltage source as being one big special ' \
+         'called a <b>supernode</b>, because we are basically considering the whole voltage source as being one big special ' \
          'node, in the sense that we are adding together all the currents in both ends of it.\n\n</p>'
 
     res+= '<p>Besides the main system equations, we might have auxiliary equations to define the current or voltage ' \
           'values in dependent power sources. It\'s easy to conclude that the number of auxiliary equations is equal ' \
           'to the number of dependent power sources.\n\n\n</p>'
 
-    res+= '<p>Circuit Explanation:\n\n</p>'
+    res+= '<p><b>Circuit Explanation:\n\n</b></p>'
 
     nN=circuit.nodeCnt
     nC=len(circuit.getBranchesWithDep())
@@ -106,15 +110,15 @@ def stepByStepNA(circuit,mnaVector):
         idxAdded.add(i)
         # TODO: MAKE SURE THIS DOESNT ONLY WORK IN ONE LEVEL , MEANING IT WILL NOT RETURN TWO VOLTAGE SOURCES THAT ARE CONNECTED THROUGH A THIRD
         for j in range(i + 1, len(brVS)):
+            to_add = set()
             for br in brVSgroups[-1]:
-                to_add = None
                 if br.node1 == brVS[j].node1 != 0 or br.node2 == brVS[j].node2 != 0 or br.node2 == brVS[j].node1 != 0 or \
                         br.node1 == brVS[j].node2 != 0:
-                    to_add = j
-                    continue
-            if to_add != None:
-                brVSgroups[-1].add(brVS[to_add])
-                idxAdded.add(to_add)
+                    to_add.add(j)
+            if len(to_add)>0:
+                for idx in to_add:
+                    brVSgroups[-1].add(brVS[idx])
+                    idxAdded.add(idx)
     for bGroups in brVSgroups:
         nodesInGroup = set()
         for b in bGroups:
@@ -171,7 +175,8 @@ def stepByStepNA(circuit,mnaVector):
 
     return res
 
-
+#This method returns the specific resolution of the three types of exercise (current, voltage or power in a given
+#component)
 def stepByStepExercise(circuit,elem,typeOfExercise,mnaVector):
     branch=circuit.getBranchCompName(elem)
     if typeOfExercise=='V':
@@ -181,7 +186,7 @@ def stepByStepExercise(circuit,elem,typeOfExercise,mnaVector):
     else:
         return stepByStepPower(circuit,branch,mnaVector)
 
-
+#Auxiliary method for the step by step resolution
 def stepByStepVoltage(circuit,branch,mnaVector):
     res='<p>After having solved the NA system we already have the voltages for each node, so to obtain the voltage in a' \
         ' component it\'s very straight-forward, all we have to do is obtain the difference between the voltages in ' \
@@ -191,7 +196,7 @@ def stepByStepVoltage(circuit,branch,mnaVector):
     res += str(val) + 'V$$\n'
     return (val,res)
 
-
+#Auxiliary method for the step by step resolution
 def stepByStepCurrent(circuit,branch,mnaVector):
     res='<p>The way to obtain a current in a component depends on the type of component in question.\n</p>'
 
@@ -218,7 +223,7 @@ def stepByStepCurrent(circuit,branch,mnaVector):
     res += str(val) + 'A$$\n'
     return (val,res)
 
-
+#Auxiliary method for the step by step resolution
 def stepByStepPower(circuit,branch,mnaVector):
     res = '<p>To obtain the power in a component we have to obtain the product of the current times the voltage in it.\n</p>'
 
@@ -248,6 +253,8 @@ def stepByStepPower(circuit,branch,mnaVector):
     res += str(val) + 'W$$\n'
     return (val,res)
 
+
+#This method receives as an argument a list of strings that are equations in LaTeX and puts it in a system of equations
 def eqs2latex(eqs):
     res='\\left \\{ \\begin{matrix} '
     first=True
@@ -260,12 +267,19 @@ def eqs2latex(eqs):
     return res
 
 
+#This method returns a system with the nodal voltages and the respective values in the shape of a system in LaTeX
+# @mnaVector: vector of nodal voltages given by the MNA algorithm
+# @nc: node count
 def mnaVector2eqs(mnaVector,nc):
     eqs=[]
     for n in range(nc-1):
         eqs.append('V_{'+str(n+1)+'} = '+str(mnaVector[n][0])+'V')
     return eqs
 
+
+#This method returns the voltage in a branch in LaTeX
+# @branch: branch whose voltage is wanted
+# @beginningNode: the voltage will be given by V_begginingNode-V_endingNode
 def voltageInBranch(branch,beginningNode):
     if branch.node1==beginningNode:
         endingNode=branch.node2
@@ -279,6 +293,10 @@ def voltageInBranch(branch,beginningNode):
         return 'V_{' + str(beginningNode) + '}'
 
 
+#This method returns the absolute value of the voltage in a branch
+# @branch: branch whose voltage is wanted
+# @beginningNode: the voltage will be given by V_begginingNode-V_endingNode
+# @mnaVector: vector of nodal voltages given by the MNA algorithm
 def voltageInBranch_value(branch,beginningNode,mnaVector):
     if branch.node1==beginningNode:
         endingNode=branch.node2
@@ -292,6 +310,10 @@ def voltageInBranch_value(branch,beginningNode,mnaVector):
         return mnaVector[beginningNode-1][0]
 
 
+#This method returns the current in a branch in LaTeX
+# @circuit: the circuit
+# @branch: branch whose current is wanted
+# @beginningNode: the current flowing from the beginning to the ending node
 def currentInBranch(circuit,branch,beginningNode):
     if branch.comp.ctype=='R':
         return currentInResistor(branch,beginningNode)
@@ -299,6 +321,12 @@ def currentInBranch(circuit,branch,beginningNode):
         return currentInCS(circuit,branch,beginningNode)
     return currentInVS(circuit,branch,beginningNode)
 
+
+#This method returns the absolute value of the current in a branch
+# @circuit: the circuit
+# @branch: branch whose current is wanted
+# @beginningNode: the current flowing from the beginning to the ending node
+# @mnaVector: vector of nodal voltages given by the MNA algorithm
 def currentInBranch_value(circuit,branch,beginningNode,mnaVector):
     if branch.comp.ctype=='R':
         return currentInResistor_value(branch,beginningNode,mnaVector)
@@ -307,6 +335,7 @@ def currentInBranch_value(circuit,branch,beginningNode,mnaVector):
     return currentInVS_value(circuit,branch,beginningNode,mnaVector)
 
 
+#Auxiliary method for the current in branch
 def currentInVS(circuit, branch, beginningNode):
     if branch.node1==beginningNode:
         endingNode=branch.node2
@@ -336,6 +365,7 @@ def currentInVS(circuit, branch, beginningNode):
     return res+')'
 
 
+#Auxiliary method for the current in branch
 def currentInVS_value(circuit, branch, beginningNode,mnaVector):
     if branch.node1==beginningNode:
         endingNode=branch.node2
@@ -364,6 +394,7 @@ def currentInVS_value(circuit, branch, beginningNode,mnaVector):
     return res
 
 
+#Auxiliary method for the current in branch
 def currentInCS(circuit,branch, beginningNode):
     if branch.comp.ctype=='I':
         val=str(branch.comp.value)
@@ -376,6 +407,7 @@ def currentInCS(circuit,branch, beginningNode):
     return '-' + val
 
 
+#Auxiliary method for the current in branch
 def currentInCS_value(circuit,branch, beginningNode,mnaVector):
     if branch.comp.ctype=='I':
         val=branch.comp.value
@@ -388,16 +420,21 @@ def currentInCS_value(circuit,branch, beginningNode,mnaVector):
     return -val
 
 
+#Auxiliary method for the current in branch
 def currentInResistor(branch,beginningNode):
     resistor=branch.comp.name
     return '\\frac{'+voltageInBranch(branch,beginningNode)+'}{'+resistor+'}'
 
 
+#Auxiliary method for the current in branch
 def currentInResistor_value(branch,beginningNode,mnaVector):
     resistor=branch.comp.value
     return voltageInBranch_value(branch,beginningNode,mnaVector)/resistor
 
 
+#This method returns the power in a branch in LaTeX
+# @circuit: the circuit
+# @branch: branch whose power is wanted
 def powerInBranch(circuit,branch):
     if branch.comp.ctype=='R':
         return powerInResistor(branch)
@@ -406,6 +443,10 @@ def powerInBranch(circuit,branch):
     return powerInVS(circuit,branch)
 
 
+#This method returns the absolute value of the power in a branch
+# @circuit: the circuit
+# @branch: branch whose power is wanted
+# @mnaVector: vector of nodal voltages given by the MNA algorithm
 def powerInBranch_value(circuit,branch,mnaVector):
     if branch.comp.ctype=='R':
         return powerInResistor_value(branch,mnaVector)
@@ -414,16 +455,19 @@ def powerInBranch_value(circuit,branch,mnaVector):
     return powerInVS_value(circuit,branch,mnaVector)
 
 
+#Auxiliary method for the power in branch
 def powerInResistor(branch):
     resistor=branch.comp.name
     return '\\frac{('+voltageInBranch(branch,branch.node1)+')^{2}}{'+resistor+'}'
 
 
+#Auxiliary method for the power in branch
 def powerInResistor_value(branch,mnaVector):
     resistor=branch.comp.value
     return voltageInBranch_value(branch,branch.node1,mnaVector)**2/resistor
 
 
+#Auxiliary method for the power in branch
 def powerInVS(circuit,branch):
     if branch.node1!=0:
         beginningNode=branch.node1
@@ -439,6 +483,7 @@ def powerInVS(circuit,branch):
     return '\\left |'+val+' \\times ('+currentInVS(circuit,branch,beginningNode)+') \\right |'
 
 
+#Auxiliary method for the power in branch
 def powerInVS_value(circuit,branch,mnaVector):
     n1=branch.node1
     n2=branch.node2
@@ -456,19 +501,24 @@ def powerInVS_value(circuit,branch,mnaVector):
     return abs(val*currentInVS_value(circuit,branch,beginningNode,mnaVector))
 
 
+#Auxiliary method for the power in branch
 def powerInCS(circuit,branch):
     n1 = branch.node1
     val=currentInCS(circuit,branch,n1)
     return '\\left |'+val+' \\times ('+voltageInBranch(branch,n1)+') \\right |'
 
 
-
+#Auxiliary method for the power in branch
 def powerInCS_value(circuit,branch,mnaVector):
     n1 = branch.node1
     val=currentInBranch_value(circuit,branch,n1,mnaVector)
     return abs(val*voltageInBranch_value(branch,n1,mnaVector))
 
 
+#Given a circuit and a node number,this method returns the equation of that node
+#NOTE: THIS ONLY WORKS IF THE NODE HAD NO VSs CONNECTED TO IT
+# @c: the circuit
+# @node: the node
 def nodeEq(c,node):
     br=c.getBranchesNode(node)
 
@@ -484,17 +534,7 @@ def nodeEq(c,node):
     return eq
 
 
-def superNodeVoltageEq(circuit,branch):
-    ct=branch.comp.ctype
-    if ct=='V':
-        val=str(branch.comp.value)
-    elif ct=='CCVS':
-        val=str(branch.comp.value)+' \\times I_{'+branch.comp.dependent.comp.name+'}'
-    else: #'VCVS'
-        val = str(branch.comp.value) + ' \\times V_{' + branch.comp.dependent.comp.name + '}'
-    return voltageInBranch(branch,branch.node1)+' = ' + val
-
-
+#Given a list of branches included in the supernode, this method returns a list of voltage equations
 def superNodeVoltageEq(circuit,branch):
     eqs=list()
     for b in branch:
@@ -540,6 +580,7 @@ def superNodeCurrentEq(c,branch):
     return eq
 
 
+#This method returns a list of LaTeX equations one for each dependency in the circuit
 def depEqs(c):
     br=c.getBranchesWithDep()
 
@@ -560,6 +601,8 @@ def depEqs(c):
     return eqs
 
 
+#This method returns a list of branches connected to another branch but that don't have any VS connected to it.
+#The method is used to calculate the current going through a VS
 def nonVSbranchesConnectedToBranchThroughNode(circuit,branch,node):
     if node==0:
         return None,None
