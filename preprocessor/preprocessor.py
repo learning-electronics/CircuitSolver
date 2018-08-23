@@ -7,7 +7,7 @@ from spiceProcessor import run_parser
 
 sys.path+=['mna/']
 from mnaModule import mna
-from respSel import get_solution 
+from randSol import randomWrongs
 
 sys.path+=['explainer/']
 from circuit2na import stepByStepNA,stepByStepExercise 
@@ -40,10 +40,10 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	#print(correct_answer)
 	#print(specific_res)
 
-	#TODO
-	ws1=-1
-	ws2=-2
-	ws3=-3
+	wss=randomWrongs(correct_answer,3)
+	ws1=wss[0]
+	ws2=wss[1]
+	ws3=wss[2]
 
 
 	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws1,ws2,ws3,specific_res))
