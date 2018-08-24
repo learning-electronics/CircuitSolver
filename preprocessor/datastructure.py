@@ -199,7 +199,7 @@ class Component:
 	def __init__(self,nm,vl,ct,dep=None):
 		self.name=nm  #str()
 		self.ctype=ct #str()
-		self.value=float(vl) #float() # ?
+		self.value=complex(vl) #float() # ?
 		self.dependent=dep #Branch()
 
 	def __repr__(self):

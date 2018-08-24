@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, '..')
 sys.path.insert(0, '../mna')
 from datastructure import Circuit,Branch,Component
-from mnaModule import mna
+from mnaModule_AC import mna
 from circuit2na import circuit2na
 from circuit2na import stepByStepNA,stepByStepExercise
 c = Circuit()
@@ -93,6 +93,3 @@ for b in c.branches:
     res+=tmp2
 res+='Sum='+str(val)+'\n' \
      'PS: this value may not be null due to precision errors, but all the powers are well calculated.\n'
-
-
-
