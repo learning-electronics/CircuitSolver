@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, '..')
 sys.path.insert(0, '../mna')
 from datastructure import Circuit,Branch,Component
-from mnaModule import mna
+from mnaModule_AC import mna
 from circuit2na import circuit2na
 from circuit2na import stepByStepNA,stepByStepExercise
 c = Circuit()
