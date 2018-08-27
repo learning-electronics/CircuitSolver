@@ -1,15 +1,19 @@
-from os.path import abspath
+from os.path import abspath,realpath,relpath,dirname,join
 import sys
 from datastructure import Circuit,Branch,Component
 
-sys.path+=['parser/']
+#Get project dir
+project_path=dirname(realpath(__file__))
+
+sys.path+=[join(project_path,'parser/')]
 from spiceProcessor import run_parser
 
-sys.path+=['mna/']
+sys.path+=[join(project_path,'mna/')]
 from mnaModule import mna
+#from mnaModule_DC import mna
 from randSol import randomWrongs
 
-sys.path+=['explainer/']
+sys.path+=[join(project_path,'explainer/')]
 from circuit2na import stepByStepNA,stepByStepExercise 
 
 import MySQLdb as mysql
@@ -24,6 +28,9 @@ import MySQLdb as mysql
 #This function handles all the backend operations to solve and store a question.
 #It is strongly advised to surround this function with a try..except block
 def handler(circpath,imgpath,questtext,questtype,compname,freq):
+	#Get project dir
+	project_path=dirname(realpath(__file__))
+
 	#Connect to the DB
 	_connect=mysql.connect(user='ele',passwd='itsucks',host='localhost', db='CIRCUITDB')
 	_cursor=_connect.cursor()
@@ -31,7 +38,7 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	#Parse the SPICE file and run MNA to get solutions
 	#circ -> circuit datastructure
 	#mnastuff -> MNA related variables
-	circ=run_parser(circpath)
+	circ=run_parser(abspath(circpath))
 	circ.calcImpedances(freq)
 	mnastuff=mna(circ)
 
@@ -39,9 +46,9 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	#baseres -> string with the general expanation
 	baseres=stepByStepNA(circ,mnastuff['x'])
 
-	print(abspath(circpath))
+	print(relpath(abspath(circpath),project_path))
 	#Insert into the DB the Cirucit
-	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(abspath(circpath),abspath(imgpath),baseres,questtext))
+	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(relpath(abspath(circpath),project_path),relpath(abspath(imgpath),project_path),baseres,questtext))
 
 	#Get the attributed circuit id (cid)
 	cid=int(_cursor.fetchall()[0][0])
