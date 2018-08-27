@@ -1,5 +1,11 @@
 grammar spice;
 
+//Grammar designed to handle the simpler declarations of the SPICE standard
+//The only command implemented is .END
+//Passive compoents are allowed and parsed
+//Coupled windings (and related components) are NOT accepted by this grammar.
+//Dependent fonts are allowed and parsed
+
 netlist: NL* title NL+ (element NL+)* ('.end'|'.END') NL+ EOF; 
 
 title: COMBS+; 

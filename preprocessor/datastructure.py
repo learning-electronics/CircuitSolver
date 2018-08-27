@@ -1,5 +1,9 @@
 #Circuit class assumes that there is always a alternative branch when removing dummy branches
 
+#A Circuit contains a list of Branch and the Branch count.
+#A Branch contains a list of two nodes and a Component.
+#A Component contains a name, value, type and an optional dependent Component
+
 class Circuit:
 	def __init__(self):
 		self.nodeCnt=0 
@@ -11,6 +15,7 @@ class Circuit:
 			st+="	"+str(b).replace("\n","\n	")+"\n\n"
 		return st
 
+	#Refreshes the value of self.nodeCnt
 	def updNodeCnt(self):
 		_mp=set()
 		for _br in self.branches:
@@ -20,11 +25,12 @@ class Circuit:
 		self.nodeCnt=len(_mp)
 		return self.nodeCnt
 
+	#Adds the Branch 'br' to the Branch list
 	def addBranch(self,br):
-		#assert already in?
+		#FIXME assert already in?
 		self.branches.append(br)
 
-	#get branches with component name cname
+	#Get the Branch list with component name 'cname'
 	def getBranchCompName(self,cname):
 		l=list(filter(lambda x: x.getComponent().getName()==cname,self.branches))
 
@@ -32,20 +38,23 @@ class Circuit:
 
 		return l[0] if len(l)==1 else None
 	
-	#get branches with nodes (start end) nds
+	#Get the Branch list with nodes (start end) 'nds'
 	def getBranchesNodes(self,nds):
 		return list(filter(lambda x: (x.node1==nds[0] and x.node2==nds[1]) or (x.node1==nds[1] and x.node2==nds[0]),self.branches))
 
-	#get branches that connect to node nd
+	#Get the Branch list that connect to node 'nd'
 	def getBranchesNode(self,nd):
 		return list(filter(lambda x: x.node1==nd or x.node2==nd,self.branches)) 
 
+	#Get the Branch list that contain a tension source (dependent or not)
 	def getBranchesWithVS(self):
 		return list(filter(lambda x: x.comp.ctype == 'V' or x.comp.ctype == 'VCVS' or x.comp.ctype == 'CCVS', self.branches))
 
+	#Get the Branch list whose Component depends on another Component
 	def getBranchesWithDep(self):
 		return list(filter(lambda x: x.comp.ctype == 'VCCS' or x.comp.ctype == 'CCCS' or x.comp.ctype == 'VCVS' or x.comp.ctype == 'CCVS', self.branches))
 
+	#Renames the node number 'nold' to 'nnew' on all branches
 	def renameNode(self,nnew,nold):
 		for _br in self.branches:
 			_nds=list(_br.getNodes())
@@ -55,20 +64,19 @@ class Circuit:
 				_nds[1]=nnew
 			_br.setNodes(tuple(_nds))
 
-
+	#Moves Dependency from one Branch 'brold' to another 'brnew'
 	def changedep(self,brnew,brold):
 		for _br in self.branches:
 			if _br.getComponent().dependent!=None and _br.getComponent().dependent.getNodes()==brold.getNodes():
 				_br.getComponent().dependent=brnew
 
-	#returns the best alternative branch to read the current
+	#Returns the best alternative branch to read the current
 	def smartAltBranch(self,nds):
 		
 		for target in ['I','R','V']:
 
-			#first search for one direction, then the other one
+			#First search for one direction, then the other one
 			for startnode in range(2):
-				#print("startnode=",startnode)
 				_brs=self.getBranchesNode(nds[startnode])
 				if(len(_brs)!=2):
 					continue
@@ -86,7 +94,6 @@ class Circuit:
 						break
 		
 					if checkthisbr.getComponent().ctype==target:
-						#print("Found alternative="+repr(checkthisbr))
 						return checkthisbr 
 
 					for nextnode in range(2):
@@ -94,13 +101,11 @@ class Circuit:
 						_brs=self.getBranchesNode(checkthisbr.getNodes()[nextnode])
 						if(len(_brs)==2):
 							if _brs[0].getNodes()!=checkthisbr.getNodes() and _brs[0].getNodes()!=lastbr.getNodes():
-								#print("got in 1")
 								lastbr=checkthisbr
 								checkthisbr=_brs[0]
 								found_next_hop=True
 								break
 							elif _brs[1].getNodes()!=checkthisbr.getNodes() and _brs[1].getNodes()!=lastbr.getNodes():
-								#print("got in 2")
 								lastbr=checkthisbr
 								checkthisbr=_brs[1]
 								found_next_hop=True
@@ -109,7 +114,6 @@ class Circuit:
 					if found_next_hop:
 						continue
 					else:
-						#print("break")
 						break
 
 		assert False, "No alternative branch"
@@ -117,22 +121,22 @@ class Circuit:
 	#Removes all 0V Voltage sources, 0Ohm Resistors and 0H Inductors used for current measurement
 	def removeBadBranches(circ):
 		done=False
-		while not done: #for every change, force the algorithm to traverse the circuit again
+		while not done: #For every change, force the algorithm to traverse the circuit again
 			done=True
 			for _br in circ.branches:
 				_comp=_br.getComponent()
 				if _comp.value==0 and (_comp.ctype=='V' or _comp.ctype=='R' or _comp.ctype=='L'):
 					if len(circ.getBranchesNodes(_br.getNodes()))>1: #another components in paralel
-						circ.branches.remove(_br) #simply remove dummy branch
+						circ.branches.remove(_br) #Simply remove dummy branch
 					else: 
 						_nds=_br.getNodes()
 						_alternative=circ.smartAltBranch(_nds)
 						circ.changedep(_alternative,_br)
-						if _nds[1]==0: #rename nodes/branches
+						if _nds[1]==0: #Rename nodes/branches
 							circ.renameNode(_nds[1],_nds[0])
 						else:
 							circ.renameNode(_nds[0],_nds[1])	
-						circ.branches.remove(_br) #remove branch/component
+						circ.branches.remove(_br) #Remove branch/component
 
 					done=False
 					break
@@ -142,19 +146,19 @@ class Circuit:
 	#Makes nodes number sequencial
 	def fixNodes(circ):
 		_mp=set()
-		#get all node numbers
+		#Get all node numbers
 		for _br in circ.branches:
 			_gn=_br.getNodes()
 			_mp.add(_gn[0])
 			_mp.add(_gn[1])
 
-		#remove node 0
+		#Remove node 0
 		_mp.remove(0)
 
-		#get list
+		#Get list
 		_nlst=list(_mp)
 		
-		#fix node numbers
+		#Fix node numbers
 		for _br in circ.branches:
 			_gn=_br.getNodes()	
 
@@ -185,12 +189,15 @@ class Branch:
 		st="Branch: Node1: "+str(self.node1)+" Node2: "+str(self.node2)+"\n"+str(self.comp).replace("\n","\n	")
 		return st
 
+	#Returns the nodes of this Branch
 	def getNodes(self):
 		return (self.node1,self.node2)
 
+	#Returns the component of this Branch
 	def getComponent(self):
 		return self.comp
 
+	#Sets the nodes of this Branch
 	def setNodes(self,ns):
 		self.node1=ns[0]
 		self.node2=ns[1]
@@ -206,8 +213,11 @@ class Component:
 		_dep=str(self.dependent).replace("\n","\n   ")
 		return "Component:\nName: "+self.name+"\nType: "+self.ctype+"\nValue: "+str(self.value)+ "\nDependency: "+("\n" if _dep!="None" else "")+ _dep
 
+	#Returns the name of the Component
 	def getName(self):
 		return self.name
+
+	#Converts a given value to the International System, given its scale
 	def convertSI(value,unit):
 		if len(unit)==1 or unit==None or unit=='':
 			pass

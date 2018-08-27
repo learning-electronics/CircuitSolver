@@ -4,6 +4,8 @@ from random import uniform
 deviation=0.4
 dd=0.4
 
+#Calls randomWrong 'cnt' times, ensuring that there is no repeated wrong answer
+#for the correct answer 'cs'
 def randomWrongs(cs,cnt):
 	filled=0
 	wrongs=list()
@@ -14,6 +16,7 @@ def randomWrongs(cs,cnt):
 			filled+=1
 	return wrongs
 
+#Generates and returns a wrong answer based on the correct answer 'cs'
 def randomWrong(cs):
 	ldv=uniform(1-dd,1+dd)*deviation
 	hdv=uniform(1-dd,1+dd)*deviation
@@ -27,6 +30,7 @@ def randomWrong(cs):
 
 	return ws
 
+#Main used for testing only
 def main(argv):
 	for i in range(int(argv[2])):
 		print(randomWrong(float(argv[1])))

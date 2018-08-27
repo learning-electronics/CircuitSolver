@@ -17,7 +17,7 @@ class spiceExtractor(spiceListener):
 
 	# Exit a parse tree produced by spiceParser#netlist.
 	def exitNetlist(self, ctx:spiceParser.NetlistContext):
-		#Fix dependencies
+		#Fix dependencies to allow recursive use of component.dependent
 		for br in self.circ.branches:
 			if br.getComponent().dependent!=None:
 				if len(br.getComponent().dependent.getNodes())<1:
@@ -40,13 +40,13 @@ class spiceExtractor(spiceListener):
 	# Exit a parse tree produced by spiceParser#element.
 	def exitElement(self, ctx:spiceParser.ElementContext):
 
-		#Check dependencies:
-		if ctx.sn!=None: #nodes dependency (tension)
+		#Check dependencies. Declaration order on the grammar is important: you can't rely on something that is not declared (yet):
+		if ctx.sn!=None: #Nodes dependency (tension)
 			_gb=self.circ.getBranchesNodes((int(ctx.sn.n1.text),int(ctx.sn.n2.text)))	
 			assert len(_gb)>0,"Branch ("+ctx.sn.n1.text+","+ctx.sn.n2.text+") does not exist"
 
 			_dep=Branch(int(ctx.sn.n1.text),int(ctx.sn.n2.text),None)
-		elif ctx.cd!=None: #component dependency (current)
+		elif ctx.cd!=None: #Component dependency (current)
 			_tmp=self.circ.getBranchCompName(ctx.cd.text)
 			assert _tmp!=None,"Component "+ctx.cd.text+" does not exist"
 			_dep=Branch(_tmp.getNodes()[0],_tmp.getNodes()[1],None)
@@ -54,6 +54,7 @@ class spiceExtractor(spiceListener):
 		else:
 			_dep=None
 
+		#Separate value from scale
 		_val=list()
 		if ctx.value!=None:
 			for _i in ctx.value.text:
@@ -69,6 +70,8 @@ class spiceExtractor(spiceListener):
 
 		_val=float(_val)
 
+
+		#Translate SPICE component nomenclature to ELE component nomenclature
 		if ctx.name.text[0]=='E':
 			_comp='VCVS'
 		elif ctx.name.text[0]=='F':
