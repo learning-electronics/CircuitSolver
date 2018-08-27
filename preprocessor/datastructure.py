@@ -2,7 +2,7 @@
 
 #A Circuit contains a list of Branch and the Branch count.
 #A Branch contains a list of two nodes and a Component.
-#A Component contains a name, value, type and an optional dependent Component
+#A Component contains a name, value, impedance (if freq >0Hz), type and an optional dependent Component
 
 class Circuit:
 	def __init__(self):
@@ -178,6 +178,10 @@ class Circuit:
 
 		return circ #redundant return
 		
+	#Calculates the impedances for all the Components of the circuit on the frequency (in Hz) 'freq'
+	def calcImpedances(self,freq):
+		for br in self.branches:
+			br.comp.calcImpedance(freq)
 
 class Branch:
 	def __init__(self,n1,n2,comp):
@@ -206,7 +210,8 @@ class Component:
 	def __init__(self,nm,vl,ct,dep=None):
 		self.name=nm  #str()
 		self.ctype=ct #str()
-		self.value=complex(vl) #float() # ?
+		self.value=float(vl) #float() # ?
+		self.impedance=complex()
 		self.dependent=dep #Branch()
 
 	def __repr__(self):
@@ -216,6 +221,20 @@ class Component:
 	#Returns the name of the Component
 	def getName(self):
 		return self.name
+
+	#Calculates the impedance for the Component on the frequency in Hz 'freq'
+	def calcImpedance(self,freq):
+		if self.ctype=='R':
+			self.impedance=complex(self.value)		
+		elif self.ctype=='C':
+			if freq!=0:
+				self.impedance=1.0/(1j*2.0*math.pi*freq*self.value)
+			else:
+				self.impedance=complex('Inf')
+		elif self.ctype=='L':
+			self.impedance=1j*2.0*math.pi*freq*self.value
+		else:
+			self.impedance=None #Power sources
 
 	#Converts a given value to the International System, given its scale
 	def convertSI(value,unit):

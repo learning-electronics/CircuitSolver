@@ -20,9 +20,10 @@ import MySQLdb as mysql
 #questtext -> General question text
 #questtype -> Type of question, either 'V' (Tension) , 'I' (Current), 'P' (Power)
 #compname -> Name of the component that the question is about
+#freq -> Circuit freq in hertz (freq=0 -> DC)
 #This function handles all the backend operations to solve and store a question.
 #It is strongly advised to surround this function with a try..except block
-def handler(circpath,imgpath,questtext,questtype,compname):
+def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	#Connect to the DB
 	_connect=mysql.connect(user='ele',passwd='itsucks',host='localhost', db='CIRCUITDB')
 	_cursor=_connect.cursor()
@@ -31,6 +32,7 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 	#circ -> circuit datastructure
 	#mnastuff -> MNA related variables
 	circ=run_parser(circpath)
+	circ.calcImpedances(freq)
 	mnastuff=mna(circ)
 
 	#Get base resolution based on the circuit and solutions
@@ -66,7 +68,7 @@ def handler(circpath,imgpath,questtext,questtype,compname):
 
 #Main used for testing
 def main(argv):
-	handler(argv[1],argv[2],'Test question','V','R1')
+	handler(argv[1],argv[2],'Test question','V','R1',0)
 
 if __name__ == '__main__':
         main(sys.argv)
