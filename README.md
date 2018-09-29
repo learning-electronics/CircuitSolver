@@ -13,7 +13,9 @@ The two last files are:
 * `preprocessor.py`: Top-level module that offers a simple interface to the foreign modules (ex: web server calls).
                                                                                                                   
 NOTE: This project was developed using Python 3.0, not Python 2.0.                                                                                                          
-                                                    
+
+
+
                                                     
 ## Installation guide
 
@@ -41,7 +43,9 @@ To compile the grammar you also need a copy of *ANTLR4*:
 
 
                                                                                                                                                                             
-## Top level (`preprocessor.py`)                                                                                                                                            
+## Top level (`preprocessor.py`)  
+
+
 The interface offered to the `CircuitSolver` caller is the following:
 
 `def handler(circpath,imgpath,questtext,questtype,compname,freq)`
@@ -56,17 +60,37 @@ The arguments are:
 
 This function handles all the back-end operations to solve and store a question.
 
-
 NOTE: It is strongly advised to surround this function with a try..except block.
-
-
 
 
 
 
 ## Datastructure (`datastructure.py`)
 
+
+This database is used to store one circuit in volatile memory while it is are still being processed.
+The structure is divided in 3 classes:
+
+* class `Circuit`: Contains a list of `Branch` and `Branch` count;
+* class `Branch`: Contains a list of two nodes and a `Component`;
+* class `Component`: Characterizes a component (contains a name, value, impedance (used only in AC), type and an optional dependent `Component`).
+
+### Methods of `Circuit`
+
+The most important methods (interface methods) of this class are:
+* `removeBadBranches(Circuit)`: This function removes typical hacks from the *SPICE* netlist and handles them; 
+*  `fixnodes(Circuit)`: This function makes the node number sequential;
+*  `updNodeCnt()`: This method updates the node count variable (`nodeCnt`);
+*  `calcImpedances(freq)`: This method calculates the impedance off all components within the circuit, given the frequency is greater than zero.
+
+
+NOTE: For more detailed method documentation, it's recommended to read the pre-function comments in the source code.
+
+
+
+
 ## Database (`database.sql`)
+
 
 This database is used to make exercises, circuits and all the related data persistent.
 
@@ -91,7 +115,10 @@ The database is composed by 4 tables and 2 stored procedures:
 * Stored Procedure `sp_CreateCircuit`: This stored procedure creates a new entry on the `CIRCUIT` table and returns the `ID` used.
 
 
+
+
 ## *SPICE* Parser Module (`parser`)
+
 
 The *SPICE* parser was implemented using *ANTLR4*. *ANTLR4* is a tool that generates a parser and a lexer for a given grammar for a specified target language (in this case Python3).
 
@@ -129,9 +156,18 @@ Inside this folder there are a lot of files, but the majority of them are auto-g
 
 Running `$ antlr4 -Dlanguage=Python3 spice.g4` inside the `parser` folder will generate new `spiceLexer.py` `spiceLexer.tokens` `spiceListener.py` `spiceParser.py` and `spice.tokens` files.
 
+
+
+
 ## Modified Nodal Analysis Module (`mna`)
 
 
+
 ## Circuit Explainer Module (`explainer`)
+
+
+
+## License
+
 
 
