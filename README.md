@@ -1,20 +1,47 @@
 # CircuitSolver
 
+
 This repository is the collection of all the modules necessary for the Elecosystem Problem Creation Datapath to work. Inside the `preprocessor` folder, we can find all the 3 main modules in the folders named:
 * `parser`: *SPICE* Netlist Parser Module;
 * `mna`: Modified Nodal Analysis Module;
-* `explainer`: Circuit Explainer Module.
-
+* `explainer`: Circuit Explainer Module.                                                                          
+                                                                                                                  
 We can also find a folder called `examples` which has multiple SPICE circuits useful for testing all the modules, especially the `parser` module.
-The two last files are:
-* `database.sql`: *MySQL*-compatible circuit and problem database declaration;
-* `datastructure.py`: Datastructure used to store temporarely a circuit while it is being processed;
+The two last files are:                                                                                           
+* `database.sql`: *MySQL*-compatible circuit and problem database declaration;                                    
+* `datastructure.py`: Datastructure used to store temporarely a circuit while it is being processed;              
 * `preprocessor.py`: Top-level module that offers a simple interface to the foreign modules (ex: web server calls).
+                                                                                                                  
+NOTE: This project was developed using Python 3.0, not Python 2.0.                                                                                                          
+                                                    
+                                                    
+## Installation guide
 
-NOTE: This project was developed using Python 3.0, not Python 2.0.
+
+This project was designed to run under GNU/Linux. Windows and Mac were *NOT* tested but might be functional. 
+
+First of all, you need Python 3:
+
+* For Debian-based distros: `$ apt-get install python3`;
+* For Arch-based distros: `$ pacman -S python3`;
+* [For manual installation](https://www.python.org/downloads/).
+
+For the CircuitSolver to run, you need to install the `antlr4`, `numpy` and `MySQLdb` modules:
+
+`$ pip install antlr4-python3-runtime numpy mysqlclient`
+
+NOTE: To avoid packet collision and dependency problems, using virtual environments might be a good practice.
 
 
-## Top level (`preprocessor.py`)
+To compile the grammar you also need a copy of *ANTLR4*:
+
+* For Debian-based distros: `$ apt-get install antlr4`;
+* For Arch-based distros: `$ pacman -S antlr4`;
+* [For manual installation](http://www.antlr.org/).
+
+
+                                                                                                                                                                            
+## Top level (`preprocessor.py`)                                                                                                                                            
 The interface offered to the `CircuitSolver` caller is the following:
 
 `def handler(circpath,imgpath,questtext,questtype,compname,freq)`
@@ -33,9 +60,35 @@ This function handles all the back-end operations to solve and store a question.
 NOTE: It is strongly advised to surround this function with a try..except block.
 
 
+
+
+
+
 ## Datastructure (`datastructure.py`)
 
 ## Database (`database.sql`)
+
+This database is used to make exercises, circuits and all the related data persistent.
+
+The cirucit and exercise database schema was made using the *MySQL* dialect, so expect it to run in *MySQL*-compatible DBMSs.
+The database is composed by 4 tables and 2 stored procedures:
+
+* Table `CHAPTER`: Stores the main subjects of the exercises. It's composed by an ID and a Name;
+* Table `SUBCHAPTER`: Stores the sub topics of incidence of the  exercises. It's Composed by an ID, the parent chapter ID and a Name;
+* Table `CIRCUIT`: This table is used to keep track of each electrical circuit used by the system. It points to the syspath of the *SPICE* netlist and to the syspath of the Image/Diagram of the system. It also has an unique ID per circuit, a base resolution for the circuit (MNA related, how to reach the tensions for each component) and the base statement of the circuit (`BaseEnu`);
+* Table `EXERCISE`: This table is used to make exercises persistent. It has the following fields:
+	* `ID`: Unique exercise identifier;
+	* `CircuitID`: Identifier of the circuit used in the exercise;
+	* `Type`: Stores the type of exercise. It can be `V` for Tension, `I` for Current or `P` for Power;
+	* `CompName`: Name of the component used in the exercise;
+	* `CorrectSol`: Correct answer for the exercise.
+	* `WrongAns1`, `WrongAns2` and `WrongAns3`: The wrong answers for the exercise;
+	* `SpecificRes`: The rest of the resolution, specific to the exercise. This concatenated after the `BaseRes` form the complete resolution for the exercise;
+	* `SubChapID`: The identifier of the SubChapter this exercise falls onto;
+	* `ChapID`: The identifier of the Chapter this exercise falls onto;
+	* This table doesn't need a specific exercise statement field, because the specific exercise statement is generated automatically.
+* Stored Procedure `sp_CreateExercise`: This stored procedure creates a new entry on the `EXERCISE` table and returns the `ID` used;
+* Stored Procedure `sp_CreateCircuit`: This stored procedure creates a new entry on the `CIRCUIT` table and returns the `ID` used.
 
 
 ## *SPICE* Parser Module (`parser`)
@@ -55,7 +108,7 @@ Not all the *SPICE* specification was implemented: only the subset of useful and
 * `G` Voltage Controlled Current Source (Rule: `G<name> <(+) node> <(-) node> <(+) controlling node> <(-) controlling node> <gain>`, Example: `GAMP 1 2 10 11 5`);
 * `H` Current Controlled Voltage Source (Rule: `H<name> <(+) node> <(-) node> <controlling V device name> <gain>`, Example: `HSENSE 1 2 VSENSE 10.0`);
 * `.END` Command (Used to mark the end of the netlist).
-* Although the `<title>` field was also implemented (as the specification requires it to be for a stable grammar) it is simply ignored.
+* Although the `<title>` field was also implemented (as the specification requires it to be for a correct grammar) it is simply ignored.
 
 For a in-depth look at the *SPICE* standard, use [this manual](https://www.seas.upenn.edu/~jan/spice/PSpice_ReferenceguideOrCAD.pdf) (this manual was also used as the reference for this module).
 
@@ -71,6 +124,10 @@ Inside this folder there are a lot of files, but the majority of them are auto-g
 * `spiceLexer.tokens` and `spice.tokens`: Auto-generated file that identifies all tokens accepted by the Lexer;
 * `spiceParser.py`: Auto-generated module that serves as the generic parser for the listener.
 
+
+### Compiling the grammar
+
+Running `$ antlr4 -Dlanguage=Python3 spice.g4` inside the `parser` folder will generate new `spiceLexer.py` `spiceLexer.tokens` `spiceListener.py` `spiceParser.py` and `spice.tokens` files.
 
 ## Modified Nodal Analysis Module (`mna`)
 
