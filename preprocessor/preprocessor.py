@@ -10,7 +10,6 @@ from spiceProcessor import run_parser
 
 sys.path+=[join(project_path,'mna/')]
 from mnaModule import mna
-#from mnaModule_DC import mna
 from randSol import randomWrongs
 
 sys.path+=[join(project_path,'explainer/')]
@@ -46,7 +45,7 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	#baseres -> string with the general expanation
 	baseres=stepByStepNA(circ,mnastuff['x'])
 
-	print(relpath(abspath(circpath),project_path))
+	#print(relpath(abspath(circpath),project_path))
 	#Insert into the DB the Cirucit
 	_cursor.execute('CALL sp_CreateCircuit(%s,%s,%s,%s);',(relpath(abspath(circpath),project_path),relpath(abspath(imgpath),project_path),baseres,questtext))
 
@@ -62,6 +61,8 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	#correct_answer -> solution of the problem
 	#specific_res -> string with the specific explanation
 	correct_answer,specific_res=stepByStepExercise(circ,compname,questtype,mnastuff['x'])
+	correct_answer=correct_answer.real #FIXME be careful with future implementations
+	print('correct_answer=',correct_answer)
 
 	#Generate random wrong solutions based on the correct solution
 	wss=randomWrongs(correct_answer,3)
@@ -71,11 +72,12 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 
 	#Insert into the DB the Exercise
 	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws1,ws2,ws3,specific_res))
-	print(_cursor.fetchall())
+	print('ExerciseID =',_cursor.fetchall()[0][0])
 
 #Main used for testing
 def main(argv):
 	handler(argv[1],argv[2],'Test question','V','R1',0)
+	handler(argv[1],argv[2],'Test question','V','R1',100)
 
 if __name__ == '__main__':
         main(sys.argv)

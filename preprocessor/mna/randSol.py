@@ -16,7 +16,7 @@ def randomWrongs(cs,cnt):
 			filled+=1
 	return wrongs
 
-#Generates and returns a wrong answer based on the correct answer 'cs'
+#Generates and returns a wrong answer based on the correct (not complex) answer 'cs'
 def randomWrong(cs):
 	ldv=uniform(1-dd,1+dd)*deviation
 	hdv=uniform(1-dd,1+dd)*deviation
