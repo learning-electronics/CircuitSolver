@@ -75,7 +75,7 @@ def mna(circuit):
 	for i in range(N):
 		for b in branches:
 			if (b.node1==(i+1) or b.node2==(i+1)) and b.comp.ctype in ['R','C','L']:
-				GR[i][i]=GR[i][i]+1/b.comp.value
+				GR[i][i]=GR[i][i]+1/b.comp.impedance
 
 	#Filling GR positions amongst nodes:
 	for b in branches:
@@ -83,8 +83,8 @@ def mna(circuit):
 		End=b.node2
 		if Begin!=0 and End!=0 and b.comp.ctype in ['R','C','L']:
 			"""ALTERACAO NO MNA"""
-			GR[Begin-1][End-1]=GR[Begin-1][End-1]-1/b.comp.value
-			GR[End-1][Begin-1]=GR[End-1][Begin-1]-1/b.comp.value
+			GR[Begin-1][End-1]=GR[Begin-1][End-1]-1/b.comp.impedance
+			GR[End-1][Begin-1]=GR[End-1][Begin-1]-1/b.comp.impedance
 
 
 	#print("GR")
@@ -242,7 +242,7 @@ def mna(circuit):
 	for b in branches:
 		if b.comp.ctype=='CCVS' or b.comp.ctype=='CCCS': 
 			if b.comp.dependent.comp.ctype in ['R','C','L']:
-				D[idx][idx]=-b.comp.dependent.comp.value
+				D[idx][idx]=-b.comp.dependent.comp.impedance
 			else:
 				D[idx][idx]=1
 			idx=idx+1	

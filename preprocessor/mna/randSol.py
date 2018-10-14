@@ -22,8 +22,9 @@ def randomWrong(cs):
 	hdv=uniform(1-dd,1+dd)*deviation
 	ws=uniform(1-ldv,1+hdv)*cs
 
-	if int(cs)==cs:
-		ws=int(ws)
+	#if int(cs)==cs:
+	#	ws=int(ws)
+	#FIXME
 
 	if cs==ws:
 		return randomWrong(cs)

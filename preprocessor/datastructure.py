@@ -4,6 +4,8 @@
 #A Branch contains a list of two nodes and a Component.
 #A Component contains a name, value, impedance (if freq >0Hz), type and an optional dependent Component
 
+import math
+
 class Circuit:
 	def __init__(self):
 		self.nodeCnt=0 

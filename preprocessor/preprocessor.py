@@ -61,7 +61,8 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	#correct_answer -> solution of the problem
 	#specific_res -> string with the specific explanation
 	correct_answer,specific_res=stepByStepExercise(circ,compname,questtype,mnastuff['x'])
-	correct_answer=correct_answer.real #FIXME be careful with future implementations
+
+	correct_answer=abs(correct_answer) #FIXME be careful with future implementations
 	print('correct_answer=',correct_answer)
 
 	#Generate random wrong solutions based on the correct solution
@@ -76,8 +77,13 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 
 #Main used for testing
 def main(argv):
-	handler(argv[1],argv[2],'Test question','V','R1',0)
-	handler(argv[1],argv[2],'Test question','V','R1',100)
+	if len(argv)!=5:
+		print('Usage: python '+argv[0]+' <SPICE circuit> <circuit image> <targetcomp> <frequency>')
+		print('Example: python '+argv[0]+' examples/example2_AC.cir test.png C1 400')
+		return
+
+	handler(argv[1],argv[2],'Test question','V',argv[3],float(argv[4]))
+	#handler(argv[1],argv[2],'Test question','V','C1',432)
 
 if __name__ == '__main__':
         main(sys.argv)
