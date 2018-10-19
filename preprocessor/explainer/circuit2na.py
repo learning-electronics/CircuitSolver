@@ -216,6 +216,7 @@ def stepByStepCurrent(circuit,branch,mnaVector):
         res += '$$I_{' + branch.comp.name + '} = ' + currentInVS(circuit,branch,n) + ' = '
         val = currentInVS_value(circuit,branch,n, mnaVector)
     else: # ct==CS:
+        #FIXME C and L are falling in this category
         res += '<p>In a current source, the current is defined by the current value, obviously:\n</p>'
         res += '$$I_{' + branch.comp.name + '} = ' + currentInCS(circuit,branch, branch.node1) + ' = '
         val = currentInCS_value(circuit,branch,branch.node1, mnaVector)

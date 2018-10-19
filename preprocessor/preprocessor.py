@@ -82,8 +82,13 @@ def main(argv):
 		print('Example: python '+argv[0]+' examples/example2_AC.cir test.png C1 400')
 		return
 
+	print('V')
 	handler(argv[1],argv[2],'Test question','V',argv[3],float(argv[4]))
-	#handler(argv[1],argv[2],'Test question','V','C1',432)
+	#print('I')
+	#handler(argv[1],argv[2],'Test question','I',argv[3],float(argv[4]))
+	#print('P')
+	#handler(argv[1],argv[2],'Test question','P',argv[3],float(argv[4]))
+	#crashes it
 
 if __name__ == '__main__':
         main(sys.argv)

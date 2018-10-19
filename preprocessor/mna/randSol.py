@@ -24,7 +24,7 @@ def randomWrong(cs):
 
 	#if int(cs)==cs:
 	#	ws=int(ws)
-	#FIXME
+	#FIXME need more intelligent way
 
 	if cs==ws:
 		return randomWrong(cs)
