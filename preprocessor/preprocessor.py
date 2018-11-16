@@ -66,13 +66,10 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	print('correct_answer=',correct_answer)
 
 	#Generate random wrong solutions based on the correct solution
-	wss=randomWrongs(correct_answer,3)
-	ws1=wss[0]
-	ws2=wss[1]
-	ws3=wss[2]
+	ws=randomWrongs(correct_answer,3)
 
 	#Insert into the DB the Exercise
-	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws1,ws2,ws3,specific_res))
+	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws[1],ws[2],ws[3],specific_res))
 	print('ExerciseID =',_cursor.fetchall()[0][0])
 
 #Main used for testing
