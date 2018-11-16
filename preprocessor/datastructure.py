@@ -5,6 +5,7 @@
 #A Component contains a name, value, impedance (if freq >0Hz), type and an optional dependent Component
 
 import math
+from sympy import I
 
 class Circuit:
 	def __init__(self):
@@ -213,12 +214,12 @@ class Component:
 		self.name=nm  #str()
 		self.ctype=ct #str()
 		self.value=float(vl) #float() # ?
-		self.impedance=complex()
+		self.impedance=complex() #FIXME not the correct type
 		self.dependent=dep #Branch()
 
 	def __repr__(self):
 		_dep=str(self.dependent).replace("\n","\n   ")
-		return "Component:\nName: "+self.name+"\nType: "+self.ctype+"\nValue: "+str(self.value)+ "\nDependency: "+("\n" if _dep!="None" else "")+ _dep
+		return "Component:\nName: "+self.name+"\nType: "+self.ctype+"\nValue: "+str(self.value)+"\nImpedance: "+ str(self.impedance) +"\nDependency: "+("\n" if _dep!="None" else "")+ _dep
 
 	#Returns the name of the Component
 	def getName(self):
@@ -227,14 +228,14 @@ class Component:
 	#Calculates the impedance for the Component on the frequency in Hz 'freq'
 	def calcImpedance(self,freq):
 		if self.ctype=='R':
-			self.impedance=complex(self.value)		
+			self.impedance=self.value		
 		elif self.ctype=='C':
 			if freq!=0:
-				self.impedance=1.0/(1j*2.0*math.pi*freq*self.value)
+				self.impedance=1.0/(I*2.0*math.pi*freq*self.value)
 			else:
-				self.impedance=complex('Inf')
+				self.impedance=float('Inf')
 		elif self.ctype=='L':
-			self.impedance=1j*2.0*math.pi*freq*self.value
+			self.impedance=I*2.0*math.pi*freq*self.value
 		else:
 			self.impedance=None #Power sources
 

@@ -274,7 +274,7 @@ def eqs2latex(eqs):
 def mnaVector2eqs(mnaVector,nc):
     eqs=[]
     for n in range(nc-1):
-        eqs.append('V_{'+str(n+1)+'} = '+str(mnaVector[n][0])+'V')
+        eqs.append('V_{'+str(n+1)+'} = '+str(mnaVector[n])+'V')
     return eqs
 
 
@@ -304,11 +304,11 @@ def voltageInBranch_value(branch,beginningNode,mnaVector):
     else:
         endingNode=branch.node1
     if endingNode!=0 and beginningNode!=0:
-        return mnaVector[beginningNode-1][0]-mnaVector[endingNode-1][0]
+        return mnaVector[beginningNode-1]-mnaVector[endingNode-1]
     elif beginningNode==0:
-        return -mnaVector[endingNode-1][0]
+        return -mnaVector[endingNode-1]
     else:
-        return mnaVector[beginningNode-1][0]
+        return mnaVector[beginningNode-1]
 
 
 #This method returns the current in a branch in LaTeX

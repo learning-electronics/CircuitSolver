@@ -1,4 +1,5 @@
 import numpy
+import sympy
 ## Third Version of Modified Nodal Analysis Algorithm Implementation
 ##
 #Major changes: now current dependencies are no longer made from currents in
@@ -65,7 +66,7 @@ def mna(circuit):
 	## Construction of the GR matrix
 	# GR(N,N) is the conductance matrix: 
 	#GR=zeros(N,N)
-	GR=numpy.zeros((N,N)).astype(complex)
+	GR=sympy.zeros(N,N)
 
 	#print("nodes")
 	#print(N)
@@ -75,7 +76,7 @@ def mna(circuit):
 	for i in range(N):
 		for b in branches:
 			if (b.node1==(i+1) or b.node2==(i+1)) and b.comp.ctype in ['R','C','L']:
-				GR[i][i]=GR[i][i]+1/b.comp.impedance
+				GR[i*N+i]=GR[i*N+i]+1/b.comp.impedance
 
 	#Filling GR positions amongst nodes:
 	for b in branches:
@@ -83,8 +84,8 @@ def mna(circuit):
 		End=b.node2
 		if Begin!=0 and End!=0 and b.comp.ctype in ['R','C','L']:
 			"""ALTERACAO NO MNA"""
-			GR[Begin-1][End-1]=GR[Begin-1][End-1]-1/b.comp.impedance
-			GR[End-1][Begin-1]=GR[End-1][Begin-1]-1/b.comp.impedance
+			GR[(Begin-1)*N+End-1]=GR[(Begin-1)*N+End-1]-1/b.comp.impedance
+			GR[(End-1)*N+Begin-1]=GR[(End-1)*N+Begin-1]-1/b.comp.impedance
 
 
 	#print("GR")
@@ -94,7 +95,7 @@ def mna(circuit):
 	# (voltage or current) dependent current sources 
 
 	#B=zeros(N,M);
-	B=numpy.zeros((N,M)).astype(complex)
+	B=sympy.zeros(N,M)
 
 
 	#First we fill matrix B with the currents on the independent voltage
@@ -106,12 +107,11 @@ def mna(circuit):
 			Begin=b.node1
 			End=b.node2
 			if Begin!=0:
-				B[Begin-1][idx]=1
+				B[(Begin-1)*M+idx]=1
 			if End!=0:
-				B[End-1][idx]=-1
+				B[(End-1)*M+idx]=-1
 			idx=idx+1
 
-	#FIXME: shouldnt put idx = 0 here?
 	#Now we add to the matrix B more parameters related to current dependent 
 	#current sources
 	for b in branches:
@@ -119,9 +119,9 @@ def mna(circuit):
 			Begin=b.node1
 			End=b.node2
 			if Begin!=0:
-				B[Begin-1][idx]=b.comp.value
+				B[(Begin-1)*M+idx]=b.comp.value
 			if End!=0:
-				B[End-1][idx]=-b.comp.value
+				B[(End-1)*M+idx]=-b.comp.value
 			idx=idx+1
 		
 		if b.comp.ctype=='CCVS':
@@ -134,9 +134,9 @@ def mna(circuit):
 			Begin=b.node1
 			End=b.node2
 			if Begin!=0:
-				B[Begin-1][idx]=b.comp.value
+				B[(Begin-1)*M+idx]=b.comp.value
 			if End!=0:
-				B[End-1][idx]=-b.comp.value
+				B[(End-1)*M+idx]=-b.comp.value
 			idx=idx+1
 		
 		if b.comp.ctype=='VCVS':
@@ -148,7 +148,7 @@ def mna(circuit):
 	# voltages related to dependent sources
 
 	#C=zeros(M,N);
-	C=numpy.zeros((M,N)).astype(complex)
+	C=sympy.zeros(M,N)
 
 	#first we fill matrix C with the currents on the voltage sources, this will
 	#serve to define the voltage on the branches with VSs
@@ -162,9 +162,9 @@ def mna(circuit):
 			Begin=b.node1
 			End=b.node2
 			if Begin!=0:
-				C[idx][Begin-1]=1
+				C[idx*N+Begin-1]=1
 			if End!=0:
-				C[idx][End-1]=-1
+				C[idx*N+End-1]=-1
 			idx=idx+1
 
 	#Now we indicate amongst which nodes are the currents in the dependencies
@@ -178,9 +178,9 @@ def mna(circuit):
 				Begin=b.comp.dependent.node1
 				End=b.comp.dependent.node2
 				if Begin!=0:
-					C[idx][Begin-1]=1
+					C[idx*N+Begin-1]=1
 				if End!=0:
-					C[idx][End-1]=-1
+					C[idx*N+End-1]=-1
 			idx=idx+1
 
 	#Finally we complete the B matrix with the information that says in which
@@ -190,9 +190,9 @@ def mna(circuit):
 			Begin=b.comp.dependent.node1
 			End=b.comp.dependent.node2
 			if Begin!=0:
-				C[idx][Begin-1]=1
+				C[idx*N+Begin-1]=1
 			if End!=0:
-				C[idx][End-1]=-1
+				C[idx*N+End-1]=-1
 			idx=idx+1
 
 
@@ -201,7 +201,7 @@ def mna(circuit):
 	# D is a matrix relative to voltage sources and to the dependencies of 
 	# the various sources:
 	#D=zeros(M,M);
-	D=numpy.zeros((M,M)).astype(complex)
+	D=sympy.zeros(M,M)
 
 	idx=0  #this index represents the line of matrix D in which we are working, 
 			#that corresponds to the line idx+N of the variables column
@@ -221,7 +221,7 @@ def mna(circuit):
 						break
 					idx2=idx2+1
 			
-			D[idx][idx2]=-b.comp.value
+			D[idx*M+idx2]=-b.comp.value
 			idx=idx+1
 		elif b.comp.ctype=='CCVS':
 			idx2=P
@@ -233,7 +233,7 @@ def mna(circuit):
 					idx2=idx2+1
 			
 			
-			D[idx][idx2]=-b.comp.value
+			D[idx*M+idx2]=-b.comp.value
 			idx=idx+1
 
 	#Fill on matrix D the current dependencies, if it is due to a R, we add in
@@ -242,27 +242,27 @@ def mna(circuit):
 	for b in branches:
 		if b.comp.ctype=='CCVS' or b.comp.ctype=='CCCS': 
 			if b.comp.dependent.comp.ctype in ['R','C','L']:
-				D[idx][idx]=-b.comp.dependent.comp.impedance
+				D[idx*M+idx]=-b.comp.dependent.comp.impedance
 			else:
-				D[idx][idx]=1
+				D[idx*M+idx]=1
 			idx=idx+1	
 
 
 	for b in branches:
 		if b.comp.ctype=='VCVS' or b.comp.ctype=='VCCS':
-			D[idx][idx]=-1
+			D[idx*M+idx]=-1
 			idx=idx+1
 
 	## Assembly of all matrices into the coefficients matrix - CF
 	# CF is the final coefficient matrix, formed by GR,B,C,D in the following
 	# way:
 	#CF=[GR B;C D]
-	CF=numpy.concatenate((numpy.concatenate((GR,B),axis=1),numpy.concatenate((C,D),axis=1)),axis=0)
+	CF=(GR.row_join(B)).col_join(C.row_join(D))
 
 	## Construction of the I matrix
 	# I is the matrix of the independent terms
 	#I=zeros(M+N,1);
-	I=numpy.zeros((M+N,1)).astype(complex)
+	I=sympy.zeros(M+N,1)
 
 	idx=N
 	for b in branches:
@@ -292,8 +292,8 @@ def mna(circuit):
 
 	info={}
 	info['CF'] = CF
-	#print(CF)
-	info['x'] = numpy.array(numpy.matmul(numpy.linalg.inv(CF), I))
+	#info['x'] = numpy.array(numpy.matmul(numpy.linalg.inv(CF), I))
+	info['x'] = (CF**-1)*I
 	info['I'] = I
 	info['N'] = N
 	info['M'] = M
