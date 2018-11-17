@@ -20,7 +20,7 @@ def voltageInBranch_value(branch,beginningNode,mnaVector):
 # @beginningNode: the current flowing from the beginning to the ending node 
 # @mnaVector: vector of nodal voltages given by the MNA algorithm 
 def currentInBranch_value(circuit,branch,beginningNode,mnaVector): 
-	if branch.comp.ctype=='R': 
+	if branch.comp.ctype=='R' or branch.comp.ctype=='C' or branch.comp.ctype=='L': #FIXME quick  fix
 		return currentInResistor_value(branch,beginningNode,mnaVector) 
 	elif branch.comp.ctype=='I' or branch.comp.ctype=='CCCS' or branch.comp.ctype=='VCCS': 
 		return currentInCS_value(circuit,branch,beginningNode,mnaVector) 
@@ -69,7 +69,7 @@ def currentInCS_value(circuit,branch, beginningNode,mnaVector):
 
 #Auxiliary method for the current in branch 
 def currentInResistor_value(branch,beginningNode,mnaVector): 
-	resistor=branch.comp.value 
+	resistor=branch.comp.impedance 
 	return voltageInBranch_value(branch,beginningNode,mnaVector)/resistor 
 
 #This method returns the absolute value of the power in a branch 
@@ -77,7 +77,7 @@ def currentInResistor_value(branch,beginningNode,mnaVector):
 # @branch: branch whose power is wanted 
 # @mnaVector: vector of nodal voltages given by the MNA algorithm 
 def powerInBranch_value(circuit,branch,mnaVector): 
-	if branch.comp.ctype=='R': 
+	if branch.comp.ctype=='R' or branch.comp.ctype=='C' or branch.comp.ctype=='L': #FIXME quick  fix 
 		return powerInResistor_value(branch,mnaVector) 
 	elif branch.comp.ctype=='I' or branch.comp.ctype=='CCCS' or branch.comp.ctype=='VCCS': 
 		return powerInCS_value(branch,mnaVector) 
@@ -85,7 +85,7 @@ def powerInBranch_value(circuit,branch,mnaVector):
 
 #Auxiliary method for the power in branch
 def powerInResistor_value(branch,mnaVector):
-	resistor=branch.comp.value
+	resistor=branch.comp.impedance
 	return voltageInBranch_value(branch,branch.node1,mnaVector)**2/resistor
 
 #Auxiliary method for the power in branch

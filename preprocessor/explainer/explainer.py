@@ -192,8 +192,8 @@ def stepByStepCurrent(circuit,branch,mnaVector):
 
 	ct=branch.comp.ctype
 
-	if ct=='R':
-		res+='<p>In a resistor, as we know, we can obtain the current in it from the nodal voltages and its value:\n</p>'
+	if ct=='R' or ct=='C' or ct=='L': #FIXME quick fix
+		res+='<p>In a '+branch.comp.name+', as we know, we can obtain the current in it from the nodal voltages and its value:\n</p>'
 		res+='$$I_{'+branch.comp.name+'} = '+currentInResistor(branch,branch.node1)+' = '
 		val=currentInResistor_value(branch,branch.node1,mnaVector)
 	elif ct=='V' or ct=='VCVS' or ct=='CCVS':
@@ -206,7 +206,6 @@ def stepByStepCurrent(circuit,branch,mnaVector):
 		res += '$$I_{' + branch.comp.name + '} = ' + currentInVS(circuit,branch,n) + ' = '
 		val = currentInVS_value(circuit,branch,n, mnaVector)
 	else: # ct==CS:
-		#FIXME C and L are falling in this category
 		res += '<p>In a current source, the current is defined by the current value, obviously:\n</p>'
 		res += '$$I_{' + branch.comp.name + '} = ' + currentInCS(circuit,branch, branch.node1) + ' = '
 		val = currentInCS_value(circuit,branch,branch.node1, mnaVector)
@@ -220,7 +219,7 @@ def stepByStepPower(circuit,branch,mnaVector):
 
 	ct = branch.comp.ctype
 
-	if ct=='R':
+	if ct=='R' or ct=='C' or ct=='L': #FIXME quick fix
 		res+='<p>As the component in question is a resistor, knowing that its current can be expressed as:\n</p>'
 		res+='$$'+currentInResistor(branch,branch.node1)+'$$\n'
 		res+='<p>We can simplify its poweer expression and obtain the following value:\n</p>'

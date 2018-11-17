@@ -20,7 +20,7 @@ def randomWrongs(cs,cnt):
 def randomWrong(cs):
 	ldv=uniform(1-dd,1+dd)*deviation
 	hdv=uniform(1-dd,1+dd)*deviation
-	ws=uniform(1-ldv,1+hdv)*cs
+	ws=uniform(1-ldv,1+hdv)*cs if cs!=0 else uniform(1-ldv,1+hdv)
 
 	#if int(cs)==cs:
 	#	ws=int(ws)
