@@ -6,22 +6,26 @@ import sys
 project_path=dirname(realpath(__file__))
 sys.path+=[join(project_path,'mna/')]
 from mnaModule import mna
+sys.path+=[project_path]
+from datastructure import Branch
 
 def general_ressol(circuit):
 	circuit.mnaVector=mna(circuit)['x']
 	return general_classic(circuit,circuit.mnaVector)
 
 def specific_ressol(circuit,target,questtype):
-	branch=circuit.getBranchCompName(target)
 	if questtype=='V':
+		branch=circuit.getBranchCompName(target)
 		return stepByStepVoltage(circuit,branch,circuit.mnaVector)
 	elif questtype=='I':
+		branch=circuit.getBranchCompName(target)
 		return stepByStepCurrent(circuit,branch,circuit.mnaVector)
 	elif questtype=='P':
+		branch=circuit.getBranchCompName(target)
 		return stepByStepPower(circuit,branch,circuit.mnaVector)
 	elif questtype=='T':
-		return stepByStepThevenin(circuit,branch,circuit.mnaVector)
+		return stepByStepThevenin(circuit,Branch(int(target[0]),int(target[1]),None),circuit.mnaVector)
 	elif questtype=='N':
-		return stepByStepNorton(circuit,branch,circuit.mnaVector)
+		return stepByStepNorton(circuit,Branch(int(target[0]),int(target[1]),None),circuit.mnaVector)
 	else:
-		raise Exception('circuit2na: unimplemented exercise type') 
+		raise Exception('Explainer/Solver: unimplemented exercise type') 

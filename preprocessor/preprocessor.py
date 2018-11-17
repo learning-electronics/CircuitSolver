@@ -59,30 +59,40 @@ def handler(circpath,imgpath,questtext,questtype,target,freq):
 	#specific_res -> string with the specific explanation
 	correct_answer,specific_res=specific_ressol(circ,target,questtype)
 
-	correct_answer=abs(correct_answer) #FIXME be careful with future implementations
+	if type(correct_answer)==tuple or type(correct_answer)==list:
+		for a in correct_answer:
+			a=abs(a)
+	else:
+		correct_answer=abs(correct_answer)
 	print('correct_answer=',correct_answer)
 
 	#Generate random wrong solutions based on the correct solution
 	ws=randomWrongs(correct_answer,3)
 
 	#Insert into the DB the Exercise
-	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,target,correct_answer,ws[0],ws[1],ws[2],specific_res))
+	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,str(target),str(correct_answer),str(ws[0]),str(ws[1]),str(ws[2]),specific_res))
 	print('ExerciseID =',_cursor.fetchall()[0][0])
 
 #Main used for testing
 def main(argv):
 	if len(argv)!=5:
-		print('Usage: python '+argv[0]+' <SPICE circuit> <circuit image> <targetcomp> <frequency>')
+		print('Usage: python '+argv[0]+' <SPICE circuit> <circuit image> <target> <frequency>')
 		print('Example: python '+argv[0]+' examples/example2_AC.cir test.png C1 400')
+		print('Example: python '+argv[0]+' examples/exampleThevenin.cir test.png 3,0 0 (For Norton or Thevenin)')
 		return
 
-	print('V')
-	handler(argv[1],argv[2],'Test question','V',argv[3],float(argv[4]))
-	print('I')
-	handler(argv[1],argv[2],'Test question','I',argv[3],float(argv[4]))
-	print('P')
-	handler(argv[1],argv[2],'Test question','P',argv[3],float(argv[4]))
-	#crashes it
-
+	if(len(argv[3].split(','))<2):
+		print('V')
+		handler(argv[1],argv[2],'Test question','V',argv[3],float(argv[4]))
+		print('I')
+		handler(argv[1],argv[2],'Test question','I',argv[3],float(argv[4]))
+		print('P')
+		handler(argv[1],argv[2],'Test question','P',argv[3],float(argv[4]))
+	else:
+		print('T')
+		handler(argv[1],argv[2],'Test question','T',argv[3].split(','),float(argv[4]))
+		print('N')
+		handler(argv[1],argv[2],'Test question','N',argv[3].split(','),float(argv[4]))
+		
 if __name__ == '__main__':
         main(sys.argv)

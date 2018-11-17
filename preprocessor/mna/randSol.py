@@ -10,7 +10,12 @@ def randomWrongs(cs,cnt):
 	filled=0
 	wrongs=list()
 	while filled!=cnt:
-		tmp=randomWrong(cs)
+		if type(cs)==tuple or type(cs)==list:
+			tmp=list()
+			for c in cs:
+				tmp.append(randomWrong(c))
+		else:
+			tmp=randomWrong(cs)
 		if tmp not in wrongs:
 			wrongs.append(tmp)
 			filled+=1

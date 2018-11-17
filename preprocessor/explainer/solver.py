@@ -1,3 +1,5 @@
+from explainer import *
+
 #This method returns the absolute value of the voltage in a branch
 # @branch: branch whose voltage is wanted
 # @beginningNode: the voltage will be given by V_begginingNode-V_endingNode
@@ -113,4 +115,41 @@ def powerInCS_value(circuit,branch,mnaVector):
 	return abs(val*voltageInBranch_value(branch,n1,mnaVector))
 
 
-
+#This method returns a list of branches connected to another branch but that don't have any VS connected to it.
+#The method is used to calculate the current going through a VS
+def nonVSbranchesConnectedToBranchThroughNode(circuit,branch,node):
+    if node==0:
+        return None,None
+    #this method returns a set of branches that are connected to @branch through @node but that aren't VS branches, so
+    # that we can calculate the current in a branch with a VS
+    brs=circuit.getBranchesNode(node)
+    brs.remove(branch)
+    beginningNodes=list()
+    for i in range(len(brs)):
+        beginningNodes.append(node)
+    for br in brs:
+        if br.comp.ctype=='V' or br.comp.ctype=='CCVS' or br.comp.ctype=='VCVS':
+            beginningNodes.pop(brs.index(br))
+            brs.remove(br)
+            if br.node1==node:
+                n=br.node2
+            else:
+                n=br.node1
+            if n==0:
+                return None,None
+            (begN2,brs2)=nonVSbranchesConnectedToBranchThroughNode(circuit,br,n)
+            if brs2==None:
+                return None, None
+            to_remove=set()
+            for br2 in brs2:
+                if br2 in brs:
+                    beginningNodes.pop(brs.index(br2))
+                    begN2.pop(brs2.index(br2))
+                    to_remove.add(br2)
+                else:
+                    brs.append(br2)
+            for bb in to_remove:
+                brs.remove(bb)
+            for nd in begN2:
+                beginningNodes.append(nd)
+    return (beginningNodes,brs)

@@ -1,0 +1,7 @@
+*Simple linear example
+
+example exercise
+V1 1 0 5V
+R1 2 1 1.3Kohm
+C1 2 0 1UF
+.END
