@@ -10,6 +10,7 @@ from sympy import I
 class Circuit:
 	def __init__(self):
 		self.nodeCnt=0 
+		self.mnaVector=list()
 		self.branches=list()
 
 	def __repr__(self):

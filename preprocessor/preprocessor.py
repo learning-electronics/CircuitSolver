@@ -9,11 +9,10 @@ sys.path+=[join(project_path,'parser/')]
 from spiceProcessor import run_parser
 
 sys.path+=[join(project_path,'mna/')]
-from mnaModule import mna
 from randSol import randomWrongs
 
 sys.path+=[join(project_path,'explainer/')]
-from circuit2na import stepByStepNA,stepByStepExercise 
+from toplevelcaller import general_ressol,specific_ressol 
 
 import MySQLdb as mysql
 
@@ -21,12 +20,12 @@ import MySQLdb as mysql
 #circpath -> Path to the SPICE circuit
 #imgpath -> Path to the image of the circuit
 #questtext -> General question text
-#questtype -> Type of question, either 'V' (Tension) , 'I' (Current), 'P' (Power)
-#compname -> Name of the component that the question is about
+#questtype -> Type of question, either 'V' (Tension) , 'I' (Current), 'P' (Power), 'T' (Thevenin Equivalent), 'N' (Norton Equivalent)
+#target -> Name of the component or nodes(thevenin/norton) that the question is about FIXME
 #freq -> Circuit freq in hertz (freq=0 -> DC)
 #This function handles all the backend operations to solve and store a question.
 #It is strongly advised to surround this function with a try..except block
-def handler(circpath,imgpath,questtext,questtype,compname,freq):
+def handler(circpath,imgpath,questtext,questtype,target,freq):
 	#Get project dir
 	project_path=dirname(realpath(__file__))
 
@@ -36,14 +35,12 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 
 	#Parse the SPICE file and run MNA to get solutions
 	#circ -> circuit datastructure
-	#mnastuff -> MNA related variables
 	circ=run_parser(abspath(circpath))
 	circ.calcImpedances(freq)
-	mnastuff=mna(circ)
 
 	#Get base resolution based on the circuit and solutions
 	#baseres -> string with the general expanation
-	baseres=stepByStepNA(circ,mnastuff['x'])
+	baseres=general_ressol(circ)
 
 	#print(relpath(abspath(circpath),project_path))
 	#Insert into the DB the Cirucit
@@ -55,12 +52,12 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 
 	#should be a cycle
 	#for prob in randomsolutions:
-	#correct_answer=get_solution(circ,mnastuff,compname,questtype)
+	#correct_answer=get_solution(circ,mnastuff,target,questtype)
 
 	#Run step by step resolution algorithm
 	#correct_answer -> solution of the problem
 	#specific_res -> string with the specific explanation
-	correct_answer,specific_res=stepByStepExercise(circ,compname,questtype,mnastuff['x'])
+	correct_answer,specific_res=specific_ressol(circ,target,questtype)
 
 	correct_answer=abs(correct_answer) #FIXME be careful with future implementations
 	print('correct_answer=',correct_answer)
@@ -69,7 +66,7 @@ def handler(circpath,imgpath,questtext,questtype,compname,freq):
 	ws=randomWrongs(correct_answer,3)
 
 	#Insert into the DB the Exercise
-	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,compname,correct_answer,ws[1],ws[2],ws[3],specific_res))
+	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,target,correct_answer,ws[0],ws[1],ws[2],specific_res))
 	print('ExerciseID =',_cursor.fetchall()[0][0])
 
 #Main used for testing
