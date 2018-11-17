@@ -1,0 +1,14 @@
+*Simple linear example
+
+example exercise
+R1 1 4 2ohm
+R2 1 2 3ohm
+R3 3 4 4ohm
+R4 3 4 4.5ohm
+R5 5 0 9ohm
+L1 2 4 13mH
+Vm 4 5 ;Voltmeter used for H1
+V1 3 2 3V
+H1 1 0 Vm 2.5
+G1 2 0 1 4 5
+.END

@@ -102,7 +102,7 @@ def powerInVS_value(circuit,branch,mnaVector):
 	if ct=='V':
 		val=branch.comp.value
 	elif ct=='CCVS':
-		val=branch.comp.value*currentInBranch_value(circuit,branch.comp.dependent.comp.name,branch.comp.dependent.node1,mnaVector)
+		val=branch.comp.value*currentInBranch_value(circuit,branch.comp.dependent,branch.comp.dependent.node1,mnaVector)
 	else: #'VCVS'
 		val=branch.comp.value*voltageInBranch_value(branch.comp.dependent,branch.comp.dependent.node1,mnaVector)
 	return abs(val*currentInVS_value(circuit,branch,beginningNode,mnaVector))
