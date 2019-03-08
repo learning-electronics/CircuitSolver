@@ -56,12 +56,14 @@ class spiceExtractor(spiceListener):
 
 		#Separate value from scale
 		_val=list()
+		firstc=True
 		if ctx.value!=None:
 			for _i in ctx.value.text:
-				if str(_i).isdigit() or _i=='.':
+				if str(_i).isdigit() or _i=='.' or firstc and _i=='-':
 					_val.append(_i)
 				else:
 					break 
+				firstc=False
 			_val="".join(_val)
 		else:
 			_val=0

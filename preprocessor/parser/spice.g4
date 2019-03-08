@@ -18,7 +18,7 @@ nodes: n1=INT n2=INT;
 LINECOMMENT:[;*] ~[\r\n]* -> skip; 
 FLOAT: INT? '.' INT | INT '.' INT?;
 INT: NUMBER+;
-VAL: INT'.'?COMBS?;
+VAL: '-'?INT'.'?COMBS?;
 COMBS: COMB+;
 NL:	'\r'?'\n';
 WS: [ \t]+ -> skip;
