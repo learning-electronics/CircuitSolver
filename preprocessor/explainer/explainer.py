@@ -1,5 +1,6 @@
 from solver import *
 from copy import deepcopy
+from sympy import * 
 
 #Get project dir
 from os.path import dirname,realpath,join
@@ -258,7 +259,20 @@ def stepByStepThevenin(circuit,branch,mnaVector):
 	"""
 	res='<p>To obtain the Thevenin equivelent circuit, we need to calculate the Vt and the Rt. Lets start with Vt. Vt is the tension between the nodes in open circuit:</p>\n\n'
 	res+=stepByStepCurrent(circuit,branch,mnaVector)
-	"""	
+	"""
+	#Add current source to circuit, and recalculate mna	
+	tmpcirc=deepcopy(circuit)
+	tmpbranch=Branch(branch.node2,branch.node1,Component('TestI',symbols('x'),'I'))
+	tmpcirc.addBranch(tmpbranch)#hack
+	tmpcirc.updNodeCnt()
+	tmpcirc.mnaVector=mna(tmpcirc)['x']
+	Vres=voltageInBranch_value(tmpbranch,tmpbranch.node2,tmpcirc.mnaVector)
+	#print(Vres)
+	Vt=Vres.subs(symbols('x'),0)
+	Rt=Vres.subs(symbols('x'),1)-Vt
+	#print(Vt,Rt)
+	
+	"""
 	#Get tension in open circuit
 	Vt=voltageInBranch_value(branch,branch.node1,mnaVector)
 
@@ -268,8 +282,8 @@ def stepByStepThevenin(circuit,branch,mnaVector):
 	tmpcirc.addBranch(tmpbranch)#hack
 	tmpcirc.mnaVector=mna(tmpcirc)['x']
 	It=currentInBranch_value(tmpcirc,tmpbranch,tmpbranch.node1,tmpcirc.mnaVector)
-
-	return ([Vt,Vt/It],'')
+	"""
+	return ([Vt,Rt],'')
 	
 def stepByStepNorton(circuit,branch,mnaVector):
 	#TODO explanation

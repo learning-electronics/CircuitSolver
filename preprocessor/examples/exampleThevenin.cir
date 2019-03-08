@@ -1,7 +1,7 @@
 *Simple linear example
 
 example exercise
-V1 1 0 5V
+V1 1 0 5.0V
 R1 2 1 1.3Kohm
 R3 2 0 1.3Kohm
 R2 2 3 10Kohm
