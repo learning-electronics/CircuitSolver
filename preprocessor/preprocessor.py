@@ -21,10 +21,10 @@ import MySQLdb as mysql
 #imgpath -> Path to the image of the circuit
 #questtext -> General question text
 #questtype -> Type of question, either 'V' (Tension) , 'I' (Current), 'P' (Power), 'T' (Thevenin Equivalent), 'N' (Norton Equivalent)
-#target -> Name of the component or nodes(thevenin/norton) that the question is about FIXME
+#target -> Name of the component or nodes(thevenin/norton) that the question is about
 #freq -> Circuit freq in hertz (freq=0 -> DC)
 #This function handles all the backend operations to solve and store a question.
-#It is strongly advised to surround this function with a try..except block
+#It is advised to call this function inside a try..except block
 def handler(circpath,imgpath,questtext,questtype,target,freq):
 	#Get project dir
 	project_path=dirname(realpath(__file__))
@@ -71,7 +71,9 @@ def handler(circpath,imgpath,questtext,questtype,target,freq):
 
 	#Insert into the DB the Exercise
 	_cursor.execute('CALL sp_CreateExercise(%s,%s,%s,%s,%s,%s,%s,%s);',(cid,questtype,str(target),str(correct_answer),str(ws[0]),str(ws[1]),str(ws[2]),specific_res))
-	print('ExerciseID =',_cursor.fetchall()[0][0])
+	eid=int(_cursor.fetchall()[0][0])
+	print('ExerciseID = ',eid)
+	return (cid,eid)
 
 #Main used for testing
 def main(argv):

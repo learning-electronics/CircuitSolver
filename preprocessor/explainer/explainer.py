@@ -267,28 +267,30 @@ def stepByStepThevenin(circuit,branch,mnaVector):
 	tmpcirc.updNodeCnt()
 	tmpcirc.mnaVector=mna(tmpcirc)['x']
 	Vres=voltageInBranch_value(tmpbranch,tmpbranch.node2,tmpcirc.mnaVector)
-	#print(Vres)
+	print(Vres)
 	Vt=Vres.subs(symbols('x'),0)
 	Rt=Vres.subs(symbols('x'),1)-Vt
-	#print(Vt,Rt)
+	print(Vt,Rt)
 	
-	"""
-	#Get tension in open circuit
-	Vt=voltageInBranch_value(branch,branch.node1,mnaVector)
-
-	#Get current in short circuit
-	tmpcirc=deepcopy(circuit)
-	tmpbranch=Branch(branch.node1,branch.node2,Component('Probe',0,'V',None))
-	tmpcirc.addBranch(tmpbranch)#hack
-	tmpcirc.mnaVector=mna(tmpcirc)['x']
-	It=currentInBranch_value(tmpcirc,tmpbranch,tmpbranch.node1,tmpcirc.mnaVector)
-	"""
 	return ([Vt,Rt],'')
 	
 def stepByStepNorton(circuit,branch,mnaVector):
 	#TODO explanation
-	thv=stepByStepThevenin(circuit,branch,mnaVector)[0]
-	return ([thv[0]/thv[1],thv[1]],'')
+	#$thv=stepByStepThevenin(circuit,branch,mnaVector)[0]
+	#return ([thv[0]/thv[1],thv[1]],'')
+
+	tmpcirc=deepcopy(circuit)
+	tmpbranch=Branch(branch.node2,branch.node1,Component('TestV',symbols('x'),'V'))
+	tmpcirc.addBranch(tmpbranch)#hack
+	tmpcirc.updNodeCnt()
+	tmpcirc.mnaVector=mna(tmpcirc)['x']
+	Ires=currentInBranch_value(tmpcirc,tmpbranch,tmpbranch.node2,tmpcirc.mnaVector)
+	print(Ires)
+	In=-Ires.subs(symbols('x'),0)
+	Rn=1/(Ires.subs(symbols('x'),1)+In)
+	print(In,Rn)
+	return ([In,Rn],'')
+
 
 
 #This method receives as an argument a list of strings that are equations in LaTeX and puts it in a system of equations
