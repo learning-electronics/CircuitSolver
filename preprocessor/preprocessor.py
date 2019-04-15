@@ -81,20 +81,24 @@ def main(argv):
 		print('Usage: python '+argv[0]+' <SPICE circuit> <circuit image> <target> <frequency>')
 		print('Example: python '+argv[0]+' examples/example2_AC.cir test.png C1 400')
 		print('Example: python '+argv[0]+' examples/exampleThevenin.cir test.png 3,0 0 (For Norton or Thevenin)')
+		print('Example: python '+argv[0]+' examples/exampleTransient.cir test.png R10 10s (For transient analyis)')
 		return
 
-	if(len(argv[3].split(','))<2):
+	if(len(argv[3].split(','))==2):
+		print('T')
+		handler(argv[1],argv[2],'Test question','T',argv[3].split(','),float(argv[4]))
+		print('N')
+		handler(argv[1],argv[2],'Test question','N',argv[3].split(','),float(argv[4]))
+	elif argv[4][-1]=='s' and argv[4][:-1].replace('.','',1).isdigit():
+		print('Transient')
+		handler(argv[1],argv[2],'Test question','Trans',argv[3],float(argv[4][:-1]))
+	else:
 		print('V')
 		handler(argv[1],argv[2],'Test question','V',argv[3],float(argv[4]))
 		print('I')
 		handler(argv[1],argv[2],'Test question','I',argv[3],float(argv[4]))
 		print('P')
 		handler(argv[1],argv[2],'Test question','P',argv[3],float(argv[4]))
-	else:
-		print('T')
-		handler(argv[1],argv[2],'Test question','T',argv[3].split(','),float(argv[4]))
-		print('N')
-		handler(argv[1],argv[2],'Test question','N',argv[3].split(','),float(argv[4]))
 		
 if __name__ == '__main__':
         main(sys.argv)

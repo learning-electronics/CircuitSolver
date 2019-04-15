@@ -27,5 +27,8 @@ def specific_ressol(circuit,target,questtype):
 		return stepByStepThevenin(circuit,Branch(int(target[0]),int(target[1]),None),circuit.mnaVector)
 	elif questtype=='N':
 		return stepByStepNorton(circuit,Branch(int(target[0]),int(target[1]),None),circuit.mnaVector)
+	elif questtype=='Trans':
+		branch=circuit.getBranchCompName(target)
+		return stepByStepTrans(circuit,branch,circuit.mnaVector)
 	else:
 		raise Exception('Explainer/Solver: unimplemented exercise type') 

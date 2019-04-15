@@ -291,6 +291,22 @@ def stepByStepNorton(circuit,branch,mnaVector):
 	print(In,Rn)
 	return ([In,Rn],'')
 
+def stepByStepTrans(circuit,branch,mnaVector):
+	#TODO explanation
+
+	tmpcirc=deepcopy(circuit)
+	tmpcirc.branches.remove(branch)
+	tmpcirc.updNodeCnt()
+	tmpcirc.mnaVector=mna(tmpcirc)['x']
+	#initial conditions calculated.
+
+	#create another
+	tmpcirc1=deepcopy(circuit)
+	for b in tmpcirc.branches:
+		if b.comp.ctype='L':
+			...
+	
+	
 
 
 #This method receives as an argument a list of strings that are equations in LaTeX and puts it in a system of equations
