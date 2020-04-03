@@ -303,7 +303,7 @@ def stepByStepTrans(circuit,branch,mnaVector):
 	#create another
 	tmpcirc1=deepcopy(circuit)
 	for b in tmpcirc.branches:
-		if b.comp.ctype='L':
+		if b.comp.ctype=='L':
 			...
 	
 	
