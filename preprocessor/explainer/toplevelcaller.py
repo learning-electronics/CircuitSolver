@@ -16,7 +16,7 @@ def general_ressol(circuit):
 	return general_classic(circuit,circuit.mnaVector)
 
 def specific_ressol(circuit,target,questtype):
-	circuit.mnaVector=mna(circuit)['x']			# NOT SURE 
+	circuit.mnaVector=mna(circuit)['x']			# NOT SURE  what 'x'
 	if questtype=='V':
 		branch=circuit.getBranchCompName(target)
 		return stepByStepVoltage(circuit,branch,circuit.mnaVector)
