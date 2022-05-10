@@ -4,6 +4,7 @@
 #A Branch contains a list of two nodes and a Component.
 #A Component contains a name, value, impedance (if freq >0Hz), type and an optional dependent Component
 
+from cmath import sqrt
 import math
 from sympy import I
 
@@ -21,7 +22,7 @@ class Circuit:
 
 	#Refreshes the value of self.nodeCnt
 	def updNodeCnt(self):
-		_mp=set()
+		_mp=set()		
 		for _br in self.branches:
 			_gn=_br.getNodes()
 			_mp.add(_gn[0])
@@ -232,7 +233,7 @@ class Component:
 			self.impedance=self.value		
 		elif self.ctype=='C':
 			if freq!=0:
-				self.impedance=1.0/(I*2.0*math.pi*freq*self.value)
+				self.impedance=1.0/(I*2.0*math.pi*float(freq)*self.value)
 			else:
 				self.impedance=float('Inf')
 		elif self.ctype=='L':

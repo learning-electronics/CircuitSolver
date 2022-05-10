@@ -7,7 +7,7 @@ from os.path import dirname,realpath,join
 import sys
 project_path=dirname(realpath(__file__))
 sys.path+=[join(project_path,'mna/')]
-from mnaModule import mna
+from mna.mnaModule import mna
 sys.path+=[project_path]
 from datastructure import Branch,Component
 

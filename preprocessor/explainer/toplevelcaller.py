@@ -5,15 +5,18 @@ from os.path import dirname,realpath,join
 import sys
 project_path=dirname(realpath(__file__))
 sys.path+=[join(project_path,'mna/')]
-from mnaModule import mna
+from mna.mnaModule import mna
 sys.path+=[project_path]
 from datastructure import Branch
+sys.path+=[join(project_path,'explainer/')]
+from explainer.explainer import *
 
 def general_ressol(circuit):
 	circuit.mnaVector=mna(circuit)['x']
 	return general_classic(circuit,circuit.mnaVector)
 
 def specific_ressol(circuit,target,questtype):
+	circuit.mnaVector=mna(circuit)['x']			# NOT SURE 
 	if questtype=='V':
 		branch=circuit.getBranchCompName(target)
 		return stepByStepVoltage(circuit,branch,circuit.mnaVector)
