@@ -169,5 +169,7 @@ Running `$ antlr4 -Dlanguage=Python3 spice.g4` inside the `parser` folder will g
 
 ## License
 
-
-
+## Example Test
+Go to 'preprocessor/' directory.
+* To get the of the voltage of component `C1`: `python3 mytopcaller.py examples/example2_AC.cir 1 1 question1 test.png V 0 C1 400`.
+* To get the resolution of the nodal analysis: `python3 mytopcaller.py examples/example2_AC.cir 1 1 question1 test.png 0 C1 400`.
