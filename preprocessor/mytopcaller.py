@@ -6,7 +6,7 @@ from datastructure import Circuit,Branch,Component
 project_path=dirname(realpath(__file__))
 
 sys.path+=[join(project_path,'parser/')]
-from parser.spiceProcessor import spiceLexer, run_parser
+from spiceProcessor import spiceLexer, run_parser
 
 sys.path+=[join(project_path,'mna/')]
 from mna.randSol import *
@@ -15,7 +15,7 @@ sys.path+=[join(project_path,'explainer/')]
 from explainer.toplevelcaller import general_ressol,specific_ressol 
 
 
-def handler(circpath, teacher, theme, question, img, public, target, freq, unit=None):
+def handler(circpath, teacher, theme, question, public, target, freq, unit=None):
     #Parse the SPICE file and run MNA to get solutions
     #circ -> circuit datastructure
     circ=run_parser(abspath(circpath))
@@ -24,7 +24,18 @@ def handler(circpath, teacher, theme, question, img, public, target, freq, unit=
 	#Get base resolution based on the circuit and solutions
     if unit==None:
         resol = general_ressol(circ)
-        print(resol)
+        exe= {
+            "teacher": teacher,
+            "theme": theme,
+            "question": question,
+            "ans1": None,
+            "ans2": None,
+            "ans3": None,
+            "correct": None,
+            "unit": unit,
+            "resol": resol,
+            "public": public
+        }
     else:
         #should be a cycle
         #for prob in randomsolutions:
@@ -41,8 +52,6 @@ def handler(circpath, teacher, theme, question, img, public, target, freq, unit=
         else:
             correct_answer=abs(correct_answer)
 
-        print('correct_answer=',correct_answer)
-
         #Generate random wrong solutions based on the correct solution
         ans=randomWrongs(correct_answer,3)
 
@@ -50,18 +59,17 @@ def handler(circpath, teacher, theme, question, img, public, target, freq, unit=
             "teacher": teacher,
             "theme": theme,
             "question": question,
-            "img": img,
-            "ans1": str(ans[0]),
-            "ans2": str(ans[1]),
-            "ans3": str(ans[2]),
-            "correct": str(correct_answer),
+            "ans1": "{:0.5f}".format(ans[0]),
+            "ans2": "{:0.5f}".format(ans[1]),
+            "ans3": "{:0.5f}".format(ans[2]),
+            "correct": "{:0.5f}".format(correct_answer),
             "unit": unit,
             "resol": resol,
             "public": public
         }
-        #Ideal case: use serialization to save the circuit and the solutions
-        print(exe)
-        return exe
+    
+    #Ideal case: use serialization to save the circuit and the solutions
+    return exe
 
 #Main used for testing
 def main(argv):

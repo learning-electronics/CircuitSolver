@@ -14,7 +14,6 @@ def voltageInBranch_value(branch,beginningNode,mnaVector):
 	elif beginningNode==0:
 		return -mnaVector[endingNode-1]
 	else:
-		print(mnaVector)
 		return mnaVector[beginningNode-1]
 
 #This method returns the absolute value of the current in a branch 
