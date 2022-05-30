@@ -23,6 +23,9 @@ def specific_ressol(circuit,target,questtype):
 	elif questtype=='I':
 		branch=circuit.getBranchCompName(target)
 		return stepByStepCurrent(circuit,branch,circuit.mnaVector)
+	elif questtype=='R':
+		branch=circuit.getBranchCompName(target)
+		return stepByStepResistance(circuit,branch,circuit.mnaVector)
 	elif questtype=='P':
 		branch=circuit.getBranchCompName(target)
 		return stepByStepPower(circuit,branch,circuit.mnaVector)

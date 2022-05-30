@@ -40,11 +40,12 @@ def handler(circpath, teacher, theme, question, public, target, freq, unit=None)
         #should be a cycle
         #for prob in randomsolutions:
         #correct_answer=get_solution(circ,mnastuff,target,questtype)
-
+        resol = general_ressol(circ)
         #Run step by step resolution algorithm
         #correct_answer -> solution of the problem
         #specific_res -> string with the specific explanation
-        correct_answer,resol=specific_ressol(circ,target,unit)
+        correct_answer,resol_spec=specific_ressol(circ,target,unit)
+        resol += resol_spec
 
         if type(correct_answer)==tuple or type(correct_answer)==list:
             for a in correct_answer:
@@ -67,7 +68,7 @@ def handler(circpath, teacher, theme, question, public, target, freq, unit=None)
             "resol": resol,
             "public": public
         }
-    
+    print(exe)
     #Ideal case: use serialization to save the circuit and the solutions
     return exe
 
@@ -78,7 +79,8 @@ def main(argv):
         print('Example: python '+argv[0]+' examples/example2_AC.cir test.png C1 400')
         print('Example: python '+argv[0]+' examples/exampleThevenin.cir test.png 3,0 0 (For Norton or Thevenin)')
         print('Example: python '+argv[0]+' examples/exampleTransient.cir test.png R10 10s (For transient analyis)')
-        print("->circpath, teacher, theme, question, img, unit, public, target, freq ")
+        print("->circpath, teacher, theme, question, public, target, freq, unit(optionals) ")
+        #python3 mytopcaller.py examples/example2_AC.cir 1 1 question1 1 C1 400 V 
         return
     if len(argv)==10:
         return handler(argv[1],argv[2],argv[3],argv[4],argv[5],argv[7],argv[8],argv[9],argv[6])

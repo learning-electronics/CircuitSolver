@@ -186,6 +186,18 @@ def circuit2na(circuit):
 	res = res.replace("--", "")
 	return res
 
+#Auxiliary method for the step by step resolution  R = V/I
+def stepByStepResistance(circuit,branch, mnaVector):
+	res=''
+	voltage_val, voltage_res = stepByStepVoltage(circuit, branch, mnaVector)
+	res+= voltage_res
+	current_val, current_res = stepByStepCurrent(circuit, branch, mnaVector)
+	res+= current_res
+	res+='$$R_{'+branch.comp.name+'} = '+str(voltage_val/current_val)+'</p>'
+	print("AQUIIIIIIIII", res)
+	return (voltage_val/current_val), res
+
+
 #Auxiliary method for the step by step resolution
 def stepByStepVoltage(circuit,branch,mnaVector):
 	res='<p>After having solved the NA system we already have the voltages for each node, so to obtain the voltage in a' \
