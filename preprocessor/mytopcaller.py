@@ -60,15 +60,14 @@ def handler(circpath, teacher, theme, question, public, target, freq, unit=None)
             "teacher": teacher,
             "theme": theme,
             "question": question,
-            "ans1": "{:0.5f}".format(ans[0]),
-            "ans2": "{:0.5f}".format(ans[1]),
-            "ans3": "{:0.5f}".format(ans[2]),
-            "correct": "{:0.5f}".format(correct_answer),
+            "ans1": "{:0.3f}".format(ans[0]),
+            "ans2": "{:0.3f}".format(ans[1]),
+            "ans3": "{:0.3f}".format(ans[2]),
+            "correct": "{:0.3f}".format(correct_answer),
             "unit": unit,
             "resol": resol,
             "public": public
         }
-    print(exe)
     #Ideal case: use serialization to save the circuit and the solutions
     return exe
 
